@@ -1,0 +1,33 @@
+{
+  "name": "wmiocli",
+  "version": "2021.1.0",
+  "description": "webMethods.io Integration API CLI Tool",
+  "bin": {
+    "wmiocli": "./wmiocli.js"
+  },
+  "scripts": {
+    "test": "wmiocli --help"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dpembo/wmiocli.git"
+  },
+  "keywords": [
+    "webMethods.io",
+    "Integration",
+    "Software",
+    "AG",
+    "wmiocli"
+
+  ],
+  "author": "Dave Pemberton",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/dpembo/wmiocli/issues"
+  },
+  "homepage": "https://github.com/dpembo/wmiocli#readme",
+  "devDependencies": {
+    "commander": "^8.3.0",
+    "request": "^2.88.2"
+  }
+}
