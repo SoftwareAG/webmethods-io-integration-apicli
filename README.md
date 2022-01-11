@@ -14,7 +14,7 @@ Contact us via the TECHcommunity if you have any questions.
 
 # Installation
 ```
-git clone https://github.com/dpembo/wmiocli.git
+git clone https://github.com/SoftwareAG/webmethods-io-integration-apicli.git
 cd wmiocli
 npm install
 node wmiocli.js --help
