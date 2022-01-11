@@ -1,8 +1,8 @@
-01 /*
-02  * webMethods.io CLI
-03  * Copyright 2021 Software AG
-04  * Apache-2.0
-05  */
+/*
+ * webMethods.io CLI
+ * Copyright 2022 Software AG
+ * Apache-2.0
+ */
 
 const rest = require('./rest.js');
 const dbg = require('./debug.js');

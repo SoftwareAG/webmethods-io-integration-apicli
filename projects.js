@@ -1,3 +1,9 @@
+/*
+ * webMethods.io CLI
+ * Copyright 2022 Software AG
+ * Apache-2.0
+ */
+
 const request = require('./rest.js');
 
 var domainName, username,password,timeout;

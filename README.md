@@ -1,6 +1,16 @@
-# Supported Verisons
-This tool has been tested against
-* webMethods.io v10.11
+# About
+This is a Node CLI tool allowing you to utilize the webMethods.io Integration public APIs from a command line.
+This requires you to provide your tenant domain name, along with a user and password that has the appropriate permissions to call the API.
+The --help parameter provides further information on how to use this along with some examples of its usage.
+
+This CLI tool has been tested against
+* webMethods.io Integration v10.11
+
+# License
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details
+These tools are provided as-is and without warranty or support. They do not constitute part of the Software AG product suite. Users are free to use, fork and modify them, subject to the license agreement. While Software AG welcomes contributions, we cannot guarantee to include every contribution in the master project.
+
+Contact us via the TECHcommunity if you have any questions.
 
 # Installation
 ```
@@ -13,9 +23,6 @@ node wmiocli.js --help
 # Usage
 
 ```
-# wmiocli
-webMethods.io Integration CLI Tool
-
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ webMethods.io Integration API CLI tool                                       │
 │ This tool provides command line access to the webMethods.io Integration APIs │
@@ -64,7 +71,7 @@ Examples:
   Help
 
   Show the command line help:
-    $ node wmiocli.js --help
+  $ node wmiocli.js --help
 
 
   Projects
