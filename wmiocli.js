@@ -5,9 +5,12 @@
  */
 
 var project = require('./projects.js');
+var role = require('./roles.js');
+var user = require('./users.js');
 var wf = require('./workflow.js');
 var dbg = require('./debug.js');
 var flowservice = require('./flowservice.js');
+var prettyprint = false;
 
 const { Command, Option } = require('commander');
 const { exit } = require('process');
@@ -15,6 +18,11 @@ const { exit } = require('process');
 function checkEnableDebug(){
   if(program.opts().verbose==true){
     dbg.enableDebug();
+  }
+
+  if(program.opts().prettyprint == true)
+  {
+    prettyprint = true;
   }
 }
 
@@ -34,7 +42,8 @@ program
   
 //options
   .addOption(new Option('-t, --timeout <delay>', 'timeout in seconds').default(60, 'one minute'))
-  .option('--verbose','Verbose output')
+  .option('--prettyprint','Pretty Print JSON output')
+  .option('--verbose','Verbose output useful for diagnosing issues')
   
 //Additional help
   .addHelpText('before', `
@@ -65,7 +74,21 @@ Examples:
     -d tenant.int-aws-us.webmethods.io 
     -u user 
     -p password 
-    project
+    project fl65d3aa87fc1783ea5cf8c8
+
+  \x1b[32mView individual project with given project name:\x1b[0m
+    $ node wmiocli.js 
+      -d tenant.int-aws-us.webmethods.io 
+      -u user 
+      -p password 
+      project Default
+
+  \x1b[32mView Project assets from project with given name:\x1b[0m
+    $ node wmiocli.js 
+      -d tenant.int-aws-us.webmethods.io 
+      -u user 
+      -p password 
+      project-assets Default      
   
   \x1b[32mUpdate Project name:\x1b[0m
   $ node wmiocli.js 
@@ -156,12 +179,26 @@ Examples:
   .showSuggestionAfterError()
 ;
 
-program.command('project [project-id]')
-.description('Lists all projects or view an individual project')
-.action((projectId) => {
+/**
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * PROJECT
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
+program.command('project [project-name]')
+.description('Lists all projects or view an individual project, specified via project name or uid')
+.action((projectName) => {
   checkEnableDebug();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout)
-  var resp = project.list(projectId);
+  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  var resp = project.list(projectName);
+  if(resp)console.log(resp);
+});  
+
+program.command('project-assets <project-name>')
+.description('Lists project assets from given project name or uid')
+.action((projectName) => {
+  checkEnableDebug();
+  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  var resp = project.listAssets(projectName);
   if(resp)console.log(resp);
 });  
 
@@ -169,7 +206,7 @@ program.command('project-create <project-name>')
 .description('Create project with given name')
 .action((projectName) => {
   checkEnableDebug();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout)
+  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   project.create(projectName);
 });
 
@@ -177,10 +214,80 @@ program.command('project-update <project-id> <project-name>')
 .description('Update project with new name')
 .action((projectId, projectName) => {
   checkEnableDebug();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout)
+  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   project.update(projectId, projectName);
 });
-  
+
+/**
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * ROLES
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
+program.command('role [role-id]')
+.description('Lists all roles or views an individual role')
+.action((roleId) => {
+  checkEnableDebug();
+  role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  var resp = role.list(roleId);
+  if(resp)console.log(resp);
+});  
+
+program.command('role-create <role-name> <role-description> <roles-list>')
+.description('Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name 2,r;')
+.action((roleName,roleDescription,rolesList) => {
+  checkEnableDebug();
+  role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  role.insert(roleName,roleDescription, rolesList);
+});  
+
+program.command('role-update <role-id> <role-name> <role-description> <roles-list>')
+.description('Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name 2,r;')
+.action((roleId, roleName,roleDescription,rolesList) => {
+  checkEnableDebug();
+  role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  role.update(roleId, roleName,roleDescription, rolesList);
+});
+
+program.command('role-delete <role-name>')
+.description('Delete a roles with the given role name')
+.action((roleId, roleName,roleDescription,rolesList) => {
+  checkEnableDebug();
+  role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  role.del(roleId);
+});  
+
+/**
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * USERS
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
+
+/**
+ * Needs user-id adding.
+ */
+program.command('user')
+.description('Lists all users')
+.action(() => {
+  checkEnableDebug();
+  user.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  user.list(undefined);
+});
+
+program.command('user-role-assignment <user-id> <role-names>')
+.description('Assigns a user to roles')
+.action((userId,roleNames) => {
+  checkEnableDebug();
+  debug("userId: " + userId);
+  debug("Roles: " + roleNames);
+  user.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  user.assignRoles(userId,roleNames);
+});
+
+/**
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * WORKFLOW IMPORT/EXPORT/DELETE/EXECUTE/STATUS
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
 program.command('workflow-export <project-id> <workflow-id> <filename>')
 .description('Export workflow with id <workflow-id> from project <project-id>')
 .action((projectId, workflowId, filename) => {
@@ -223,6 +330,11 @@ program.command('workflow-status <project-id> <run-id>')
   wf.statuswf(runId);
 });
 
+/**
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * FLOW SERVICE IMPORT/EXPORT/DELETE/EXECUTE
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
 program.command('flowservice-export <project-id> <flow-name> <file-name>')
 .description('Export FlowService with name <flow-name> from project <project-id>')
 .action((projectId, flowName,filename) => {
@@ -256,3 +368,4 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
 });
 
 program.parse();
+
