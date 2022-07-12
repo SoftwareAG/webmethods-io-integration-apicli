@@ -122,12 +122,12 @@ Examples:
      project-publish fl65d3aa87fc1783ea5cf8c8 'My deployment' 'target.int-aws-us.webmethods.io' 'targetuser' 'targetpassword' '{"output":{"workflows":["fla73a20e13dd6736cf9c355","fl3cfd145262bbc5d44acff3"],"flows":["mapLeads"],"rest_api":[],"soap_api":[],"listener":[],"messaging":[]}}'  
 
   
-  \x1b[32m/Publish Project to another tenant:\x1b[0m
-      $ node wmiocli.js 
-        -d tenant.int-aws-us.webmethods.io 
-        -u user 
-        -p password 
-         project-publish fl65d3aa87fc1783ea5cf8c8 'My deployment'   
+  \x1b[32m/Deploy published Project in the tenant with the given name and deploy version:\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-deploy projectName 1   
 
   \x1b[4mWorkflow\x1b[0m
 
@@ -197,7 +197,38 @@ Examples:
     -d tenant.int-aws-us.webmethods.io 
     -u user
     -p password 
-    flowservice-execute fl65d3aa87fc1783ea5cf8c8 myFlowService             
+    flowservice-execute fl65d3aa87fc1783ea5cf8c8 myFlowService     
+
+    
+  \x1b[4mRoles\x1b[0m
+
+  \x1b[32mGet roles list or individual role\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    role [role-name]
+
+  \x1b[32mCreates a role\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    role-create 'rolename' 'role description' 'project 1 name,r,w,e;project 2 name,r;'
+
+  \x1b[32mUpdates a role with a provided Id\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    role-update 'roleId' 'rolename' 'role description' 'project 1 name,r,w,e;project 2 name,r;'   
+
+  \x1b[32mDelete a role with a provided Id\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    role-delete 'roleId'       
 `)
 
   .showSuggestionAfterError()
@@ -297,9 +328,9 @@ program.command('role-update <role-id> <role-name> <role-description> <roles-lis
   role.update(roleId, roleName,roleDescription, rolesList);
 });
 
-program.command('role-delete <role-name>')
-.description('Delete a roles with the given role name')
-.action((roleId, roleName,roleDescription,rolesList) => {
+program.command('role-delete <roleId>')
+.description('Delete a roles with the given role id')
+.action((roleId) => {
   checkOptions();
   role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
   role.del(roleId);
