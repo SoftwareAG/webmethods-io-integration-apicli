@@ -11,11 +11,12 @@ var wf = require('./workflow.js');
 var dbg = require('./debug.js');
 var flowservice = require('./flowservice.js');
 var prettyprint = false;
+var compat = false;
 
 const { Command, Option } = require('commander');
 const { exit } = require('process');
 
-function checkEnableDebug(){
+function checkOptions(){
   if(program.opts().verbose==true){
     dbg.enableDebug();
   }
@@ -24,6 +25,7 @@ function checkEnableDebug(){
   {
     prettyprint = true;
   }
+
 }
 
 function debug(message){
@@ -33,7 +35,7 @@ const program = new Command();
 program
 
 //Program Info
-  .version('2022.04.1')
+  .version('2022.07.1')
 
 //required options
   .requiredOption('-d, --domain <tenantDomain>', 'Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"')
@@ -44,6 +46,7 @@ program
   .addOption(new Option('-t, --timeout <delay>', 'timeout in seconds').default(60, 'one minute'))
   .option('--prettyprint','Pretty Print JSON output')
   .option('--verbose','Verbose output useful for diagnosing issues')
+
   
 //Additional help
   .addHelpText('before', `
@@ -208,7 +211,7 @@ Examples:
 program.command('project [project-name]')
 .description('Lists all projects or view an individual project, specified via project name or uid')
 .action((projectName) => {
-  checkEnableDebug();
+  checkOptions();
   project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   var resp = project.list(projectName);
   if(resp)console.log(resp);
@@ -217,7 +220,7 @@ program.command('project [project-name]')
 program.command('project-assets <project-name>')
 .description('Lists project assets from given project name or uid')
 .action((projectName) => {
-  checkEnableDebug();
+  checkOptions();
   project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   var resp = project.listAssets(projectName);
   if(resp)console.log(resp);
@@ -226,7 +229,7 @@ program.command('project-assets <project-name>')
 program.command('project-create <project-name>')
 .description('Create project with given name')
 .action((projectName) => {
-  checkEnableDebug();
+  checkOptions();
   project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   project.create(projectName);
 });
@@ -234,7 +237,7 @@ program.command('project-create <project-name>')
 program.command('project-update <project-id> <project-name>')
 .description('Update project with new name')
 .action((projectId, projectName) => {
-  checkEnableDebug();
+  checkOptions();
   project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   project.update(projectId, projectName);
 });
@@ -242,7 +245,7 @@ program.command('project-update <project-id> <project-name>')
 program.command('project-delete <project-id>')
 .description('Delete project with given id')
 .action((projectId) => {
-  checkEnableDebug();
+  checkOptions();
   project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   project.del(projectId);
 });
@@ -250,7 +253,7 @@ program.command('project-delete <project-id>')
 program.command('project-publish <project-id> <publish-name> <target-tenant-domain-name> <target-user-id> <target-user-password> <assets-json>')
 .description('Pubilsh project to another tenant with given id')
 .action((projectId,publishName,targetTenantDomainName,targetUserId,targetUserPassword,assetsJson) => {
-  checkEnableDebug();
+  checkOptions();
   project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   project.pub(projectId,publishName,targetTenantDomainName,targetUserId,targetUserPassword,assetsJson);
         
@@ -259,7 +262,7 @@ program.command('project-publish <project-id> <publish-name> <target-tenant-doma
 program.command('project-deploy <projectName> <version>')
 .description('deploy published project with given version into tenant')
 .action((projectName, version) => {
-  checkEnableDebug();
+  checkOptions();
   project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   project.deploy(projectName,version);
 });
@@ -272,7 +275,7 @@ program.command('project-deploy <projectName> <version>')
 program.command('role [role-id]')
 .description('Lists all roles or views an individual role')
 .action((roleId) => {
-  checkEnableDebug();
+  checkOptions();
   role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   var resp = role.list(roleId);
   if(resp)console.log(resp);
@@ -281,7 +284,7 @@ program.command('role [role-id]')
 program.command('role-create <role-name> <role-description> <roles-list>')
 .description('Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name 2,r;')
 .action((roleName,roleDescription,rolesList) => {
-  checkEnableDebug();
+  checkOptions();
   role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
   role.insert(roleName,roleDescription, rolesList);
 });  
@@ -289,7 +292,7 @@ program.command('role-create <role-name> <role-description> <roles-list>')
 program.command('role-update <role-id> <role-name> <role-description> <roles-list>')
 .description('Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name 2,r;')
 .action((roleId, roleName,roleDescription,rolesList) => {
-  checkEnableDebug();
+  checkOptions();
   role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
   role.update(roleId, roleName,roleDescription, rolesList);
 });
@@ -297,7 +300,7 @@ program.command('role-update <role-id> <role-name> <role-description> <roles-lis
 program.command('role-delete <role-name>')
 .description('Delete a roles with the given role name')
 .action((roleId, roleName,roleDescription,rolesList) => {
-  checkEnableDebug();
+  checkOptions();
   role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
   role.del(roleId);
 });  
@@ -314,7 +317,7 @@ program.command('role-delete <role-name>')
 program.command('user')
 .description('Lists all users')
 .action(() => {
-  checkEnableDebug();
+  checkOptions();
   user.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
   user.list(undefined);
 });
@@ -322,7 +325,7 @@ program.command('user')
 program.command('user-role-assignment <user-id> <role-names>')
 .description('Assigns a user to roles')
 .action((userId,roleNames) => {
-  checkEnableDebug();
+  checkOptions();
   debug("userId: " + userId);
   debug("Roles: " + roleNames);
   user.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
@@ -337,7 +340,7 @@ program.command('user-role-assignment <user-id> <role-names>')
 program.command('workflow-export <project-id> <workflow-id> <filename>')
 .description('Export workflow with id <workflow-id> from project <project-id>')
 .action((projectId, workflowId, filename) => {
-  checkEnableDebug();
+  checkOptions();
   wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   wf.exportwf(workflowId,filename);
 });
@@ -345,7 +348,7 @@ program.command('workflow-export <project-id> <workflow-id> <filename>')
 program.command('workflow-import <project-id> <filename>')
 .description('Import workflow into project <project-id> from file <filename>')
 .action((projectId, filename) => {
-  checkEnableDebug();
+  checkOptions();
   debug("Importing Workflow");
   wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   wf.importwf(filename);
@@ -354,7 +357,7 @@ program.command('workflow-import <project-id> <filename>')
 program.command('workflow-delete <project-id> <workflow-id>')
 .description('Delete workflow <workflow-id> from project <project-id>')
 .action((projectId, workflowId) => {
-  checkEnableDebug();
+  checkOptions();
   debug("Deleting Workflow [" + workflowId + "]");
   wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   wf.deletewf(workflowId);
@@ -363,7 +366,7 @@ program.command('workflow-delete <project-id> <workflow-id>')
 program.command('workflow-execute <project-id> <workflow-id>')
  .description('Execute workflow <workflow-id> from project <project-id>')
 .action((projectId, workflowId) => {
-  checkEnableDebug();
+  checkOptions();
   wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   wf.runwf(workflowId)
 });
@@ -371,7 +374,7 @@ program.command('workflow-execute <project-id> <workflow-id>')
 program.command('workflow-status <project-id> <run-id>')
 .description('Gets Execution status for workflow execution <run-id>')
 .action((projectId, runId) => {
-  checkEnableDebug();
+  checkOptions();
   wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   wf.statuswf(runId);
 });
@@ -384,7 +387,7 @@ program.command('workflow-status <project-id> <run-id>')
 program.command('flowservice-export <project-id> <flow-name> <file-name>')
 .description('Export FlowService with name <flow-name> from project <project-id>')
 .action((projectId, flowName,filename) => {
-  checkEnableDebug();
+  checkOptions();
   flowservice.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   flowservice.exportFlowService(flowName,filename);
 });
@@ -392,7 +395,7 @@ program.command('flowservice-export <project-id> <flow-name> <file-name>')
 program.command('flowservice-import <project-id> <filename>')
 .description('Import FlowService from <filename> into project <project-id>')
 .action((projectId, filename) => {
-  checkEnableDebug();
+  checkOptions();
   flowservice.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   flowservice.importFlowService(filename);
 });
@@ -400,7 +403,7 @@ program.command('flowservice-import <project-id> <filename>')
 program.command('flowservice-delete <project-id> <flow-name>')
 .description('Delete FlowService <flow-name> from project <project-id>')
 .action((projectId, flowName) => {
-  checkEnableDebug();
+  checkOptions();
   flowservice.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   flowservice.deleteFlowService(flowName);
 });
@@ -408,7 +411,7 @@ program.command('flowservice-delete <project-id> <flow-name>')
 program.command('flowservice-execute <project-id> <flow-name> [input-json]')
  .description('Execute FlowService <flow-name> from project <project-id> with data <input-json>')
 .action((projectId, flowName,inputJson) => {
-  checkEnableDebug();
+  checkOptions();
   flowservice.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
   flowservice.runFlowService(flowName,inputJson);
 });

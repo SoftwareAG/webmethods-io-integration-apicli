@@ -25,9 +25,6 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     prettyprint = inPrettyprint;
 
     url = "https://" + domainName + "/apis/v1/rest/projects";
-    //console.log("Username [" + username + "]");
-    //console.log("URL      [" + url + "]");
-    //console.log("Timeout  [" + timeout + "]");
 }
 
 /**
