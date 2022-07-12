@@ -13,8 +13,19 @@ var flowservice = require('./flowservice.js');
 var prettyprint = false;
 var compat = false;
 
+var tenantDomain;
+var tenantUser;
+var tenantPw;
+
 const { Command, Option } = require('commander');
 const { exit } = require('process');
+const readline = require('readline-sync');
+
+function readFromConsole(question)
+{
+  var answer = readline.question("\x1b[32m" + question + "\x1b[0m");
+  return answer;
+}
 
 function checkOptions(){
   if(program.opts().verbose==true){
@@ -24,6 +35,27 @@ function checkOptions(){
   if(program.opts().prettyprint == true)
   {
     prettyprint = true;
+  }
+
+  if(program.opts().domain == undefined){
+    tenantDomain = readFromConsole('Please type your tenant domain name: ');
+  }
+  else{
+    tenantDomain = program.opts().domain
+  }
+
+  if(program.opts().user == undefined){
+    tenantUser = readFromConsole('Please type your tenant User ID: ');
+  }
+  else{
+    tenantUser = program.opts().user
+  }
+
+  if(program.opts().password == undefined){
+    tenantPw = readFromConsole('Please type your tenant User Password: ');
+  }
+  else{
+    tenantPw = program.opts().password
   }
 
 }
@@ -38,9 +70,10 @@ program
   .version('2022.07.1')
 
 //required options
-  .requiredOption('-d, --domain <tenantDomain>', 'Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"')
-  .requiredOption('-u, --user <userid>', 'Tenant User ID')
-  .requiredOption('-p, --password <password>', 'Tenant User Password')
+  .option('-d, --domain <tenantDomain>', 'Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"')
+  .option('-u, --user <userid>', 'Tenant User ID')
+  .option('-p, --password <password>', 'Tenant User Password')
+  //.requiredOption('-p, --password <password>', 'Tenant User Password')
   
 //options
   .addOption(new Option('-t, --timeout <delay>', 'timeout in seconds').default(60, 'one minute'))
@@ -243,7 +276,7 @@ program.command('project [project-name]')
 .description('Lists all projects or view an individual project, specified via project name or uid')
 .action((projectName) => {
   checkOptions();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   var resp = project.list(projectName);
   if(resp)console.log(resp);
 });  
@@ -252,7 +285,7 @@ program.command('project-assets <project-name>')
 .description('Lists project assets from given project name or uid')
 .action((projectName) => {
   checkOptions();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   var resp = project.listAssets(projectName);
   if(resp)console.log(resp);
 });  
@@ -261,7 +294,7 @@ program.command('project-create <project-name>')
 .description('Create project with given name')
 .action((projectName) => {
   checkOptions();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   project.create(projectName);
 });
 
@@ -269,7 +302,7 @@ program.command('project-update <project-id> <project-name>')
 .description('Update project with new name')
 .action((projectId, projectName) => {
   checkOptions();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   project.update(projectId, projectName);
 });
 
@@ -277,7 +310,7 @@ program.command('project-delete <project-id>')
 .description('Delete project with given id')
 .action((projectId) => {
   checkOptions();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   project.del(projectId);
 });
 
@@ -285,7 +318,7 @@ program.command('project-publish <project-id> <publish-name> <target-tenant-doma
 .description('Pubilsh project to another tenant with given id')
 .action((projectId,publishName,targetTenantDomainName,targetUserId,targetUserPassword,assetsJson) => {
   checkOptions();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   project.pub(projectId,publishName,targetTenantDomainName,targetUserId,targetUserPassword,assetsJson);
         
 });
@@ -294,7 +327,7 @@ program.command('project-deploy <projectName> <version>')
 .description('deploy published project with given version into tenant')
 .action((projectName, version) => {
   checkOptions();
-  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   project.deploy(projectName,version);
 });
 
@@ -307,7 +340,7 @@ program.command('role [role-id]')
 .description('Lists all roles or views an individual role')
 .action((roleId) => {
   checkOptions();
-  role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  role.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   var resp = role.list(roleId);
   if(resp)console.log(resp);
 });  
@@ -316,7 +349,7 @@ program.command('role-create <role-name> <role-description> <roles-list>')
 .description('Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name 2,r;')
 .action((roleName,roleDescription,rolesList) => {
   checkOptions();
-  role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  role.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint);
   role.insert(roleName,roleDescription, rolesList);
 });  
 
@@ -324,7 +357,7 @@ program.command('role-update <role-id> <role-name> <role-description> <roles-lis
 .description('Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name 2,r;')
 .action((roleId, roleName,roleDescription,rolesList) => {
   checkOptions();
-  role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  role.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint);
   role.update(roleId, roleName,roleDescription, rolesList);
 });
 
@@ -332,7 +365,7 @@ program.command('role-delete <roleId>')
 .description('Delete a roles with the given role id')
 .action((roleId) => {
   checkOptions();
-  role.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  role.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint);
   role.del(roleId);
 });  
 
@@ -349,7 +382,7 @@ program.command('user')
 .description('Lists all users')
 .action(() => {
   checkOptions();
-  user.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  user.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint);
   user.list(undefined);
 });
 
@@ -359,7 +392,7 @@ program.command('user-role-assignment <user-id> <role-names>')
   checkOptions();
   debug("userId: " + userId);
   debug("Roles: " + roleNames);
-  user.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint);
+  user.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint);
   user.assignRoles(userId,roleNames);
 });
 
@@ -372,7 +405,7 @@ program.command('workflow-export <project-id> <workflow-id> <filename>')
 .description('Export workflow with id <workflow-id> from project <project-id>')
 .action((projectId, workflowId, filename) => {
   checkOptions();
-  wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   wf.exportwf(workflowId,filename);
 });
 
@@ -381,7 +414,7 @@ program.command('workflow-import <project-id> <filename>')
 .action((projectId, filename) => {
   checkOptions();
   debug("Importing Workflow");
-  wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   wf.importwf(filename);
 });
 
@@ -390,7 +423,7 @@ program.command('workflow-delete <project-id> <workflow-id>')
 .action((projectId, workflowId) => {
   checkOptions();
   debug("Deleting Workflow [" + workflowId + "]");
-  wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   wf.deletewf(workflowId);
 });
 
@@ -398,7 +431,7 @@ program.command('workflow-execute <project-id> <workflow-id>')
  .description('Execute workflow <workflow-id> from project <project-id>')
 .action((projectId, workflowId) => {
   checkOptions();
-  wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   wf.runwf(workflowId)
 });
 
@@ -406,7 +439,7 @@ program.command('workflow-status <project-id> <run-id>')
 .description('Gets Execution status for workflow execution <run-id>')
 .action((projectId, runId) => {
   checkOptions();
-  wf.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   wf.statuswf(runId);
 });
 
@@ -419,7 +452,7 @@ program.command('flowservice-export <project-id> <flow-name> <file-name>')
 .description('Export FlowService with name <flow-name> from project <project-id>')
 .action((projectId, flowName,filename) => {
   checkOptions();
-  flowservice.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   flowservice.exportFlowService(flowName,filename);
 });
 
@@ -427,7 +460,7 @@ program.command('flowservice-import <project-id> <filename>')
 .description('Import FlowService from <filename> into project <project-id>')
 .action((projectId, filename) => {
   checkOptions();
-  flowservice.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   flowservice.importFlowService(filename);
 });
 
@@ -435,7 +468,7 @@ program.command('flowservice-delete <project-id> <flow-name>')
 .description('Delete FlowService <flow-name> from project <project-id>')
 .action((projectId, flowName) => {
   checkOptions();
-  flowservice.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   flowservice.deleteFlowService(flowName);
 });
 
@@ -443,9 +476,12 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
  .description('Execute FlowService <flow-name> from project <project-id> with data <input-json>')
 .action((projectId, flowName,inputJson) => {
   checkOptions();
-  flowservice.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,projectId);
+  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   flowservice.runFlowService(flowName,inputJson);
 });
 
+
 program.parse();
+
+
 

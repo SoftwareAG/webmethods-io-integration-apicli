@@ -28,5 +28,8 @@
   "devDependencies": {
     "commander": "^8.3.0",
     "request": "^2.88.2"
+  },
+  "dependencies": {
+    "readline-sync": "^1.4.10"
   }
 }
