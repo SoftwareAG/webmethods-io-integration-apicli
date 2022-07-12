@@ -33,7 +33,7 @@ const program = new Command();
 program
 
 //Program Info
-  .version('2021.01.0')
+  .version('2022.04.1')
 
 //required options
   .requiredOption('-d, --domain <tenantDomain>', 'Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"')
@@ -104,6 +104,27 @@ Examples:
     -p password 
     project-delete fl65d3aa87fc1783ea5cf8c8
   
+  \x1b[32mGet Project Assets:\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+     project-assets fl65d3aa87fc1783ea5cf8c8
+
+  \x1b[32m/Publish Project to another tenant:\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+     project-publish fl65d3aa87fc1783ea5cf8c8 'My deployment' 'target.int-aws-us.webmethods.io' 'targetuser' 'targetpassword' '{"output":{"workflows":["fla73a20e13dd6736cf9c355","fl3cfd145262bbc5d44acff3"],"flows":["mapLeads"],"rest_api":[],"soap_api":[],"listener":[],"messaging":[]}}'  
+
+  
+  \x1b[32m/Publish Project to another tenant:\x1b[0m
+      $ node wmiocli.js 
+        -d tenant.int-aws-us.webmethods.io 
+        -u user 
+        -p password 
+         project-publish fl65d3aa87fc1783ea5cf8c8 'My deployment'   
 
   \x1b[4mWorkflow\x1b[0m
 
@@ -216,6 +237,31 @@ program.command('project-update <project-id> <project-name>')
   checkEnableDebug();
   project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
   project.update(projectId, projectName);
+});
+
+program.command('project-delete <project-id>')
+.description('Delete project with given id')
+.action((projectId) => {
+  checkEnableDebug();
+  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.del(projectId);
+});
+
+program.command('project-publish <project-id> <publish-name> <target-tenant-domain-name> <target-user-id> <target-user-password> <assets-json>')
+.description('Pubilsh project to another tenant with given id')
+.action((projectId,publishName,targetTenantDomainName,targetUserId,targetUserPassword,assetsJson) => {
+  checkEnableDebug();
+  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.pub(projectId,publishName,targetTenantDomainName,targetUserId,targetUserPassword,assetsJson);
+        
+});
+
+program.command('project-deploy <projectName> <version>')
+.description('deploy published project with given version into tenant')
+.action((projectName, version) => {
+  checkEnableDebug();
+  project.init(program.opts().domain,program.opts().user,program.opts().password,program.opts().timeout,program.opts().prettyprint)
+  project.deploy(projectName,version);
 });
 
 /**

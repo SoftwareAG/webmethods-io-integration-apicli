@@ -48,6 +48,11 @@ function put(restEndPoint,user,pass,timeout,data,callback){
     sendBody(restEndPoint,user,pass,timeout,data,'PUT',callback);
 }
 
+function httpDelete(restEndPoint,user,pass,timeout,data,callback){
+    sendBody(restEndPoint,user,pass,timeout,data,'DELETE',callback);
+}
+
+
 function post(restEndPoint,user,pass,timeout,data,callback){
     sendBody(restEndPoint,user,pass,timeout,data,'POST',callback);
 }
@@ -229,4 +234,4 @@ function del(restEndPoint,user,pass,timeout,data,callback){
     });
 }
 
-module.exports = { get, post, put, del, postDownloadFile, postUploadFile, downloadFile };
+module.exports = { get, post, put, del, postDownloadFile, postUploadFile, downloadFile, httpDelete };
