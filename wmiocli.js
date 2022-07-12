@@ -21,9 +21,17 @@ const { Command, Option } = require('commander');
 const { exit } = require('process');
 const readline = require('readline-sync');
 
-function readFromConsole(question)
+function readFromConsole(question,isPassword)
 {
-  var answer = readline.question("\x1b[32m" + question + "\x1b[0m");
+  var answer;
+  if(isPassword !== undefined && isPassword!==null && isPassword==true)
+  {
+    answer = readline.question("\x1b[32m" + question + "\x1b[0m",{hideEchoBack: true});
+  }
+  else
+  {
+    answer = readline.question("\x1b[32m" + question + "\x1b[0m");
+  }
   return answer;
 }
 
@@ -52,7 +60,7 @@ function checkOptions(){
   }
 
   if(program.opts().password == undefined){
-    tenantPw = readFromConsole('Please type your tenant User Password: ');
+    tenantPw = readFromConsole('Please type your tenant User Password: ',true);
   }
   else{
     tenantPw = program.opts().password
