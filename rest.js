@@ -6,9 +6,15 @@
 
 const request = require('request');
 const fs = require ('fs');
+const dbg = require('./debug.js');
+
+function debug(message){
+    dbg.message("<REST> " + message);
+}
 
 function get(restEndPoint,user,pass,timeout,callback)
 {
+    debug("GET:" + restEndPoint);
     var options = {
         url: restEndPoint,
         json: true,
@@ -23,11 +29,14 @@ function get(restEndPoint,user,pass,timeout,callback)
             password: pass
         }
     };
+    debug(JSON.stringify(options));
     request(options, (err, res, body) => {
+        if(body)debug("BODY:" + JSON.stringify(body));
+        if(err)debug("ERR:" + JSON.stringify(err));
+        if(res)debug("RES:" + JSON.stringify(res));
         if(res && res.statusCode != 200)
         {
             return callback(body,99)
-            
         }
         
         if (err) {
@@ -57,6 +66,7 @@ function post(restEndPoint,user,pass,timeout,data,callback){
     sendBody(restEndPoint,user,pass,timeout,data,'POST',callback);
 }
 function sendBody(restEndPoint,user,pass,timeout,data,type,callback){
+    debug(type + " - " + restEndPoint);
     var options = {
         url: restEndPoint,
         json: true,
@@ -72,8 +82,12 @@ function sendBody(restEndPoint,user,pass,timeout,data,type,callback){
         },
         body: data
     };
+    debug(JSON.stringify(options));
 
     request(options, (err, res, body) => {
+        if(body)debug("BODY:" + JSON.stringify(body));
+        if(err)debug("ERR:" + JSON.stringify(err));
+        if(res)debug("RES:" + JSON.stringify(res));
         if(res && res.statusCode != 200){
             return callback(body,99)
         }
@@ -93,6 +107,7 @@ function sendBody(restEndPoint,user,pass,timeout,data,type,callback){
 
 
 function postUploadFile(restEndPoint,user,pass,timeout,data,filename,callback){
+    debug("postUploadFile Filename ["+ filename + "] to: " + restEndPoint);
     var options = {
         url: restEndPoint,
         json: true,
@@ -111,9 +126,14 @@ function postUploadFile(restEndPoint,user,pass,timeout,data,filename,callback){
         },
         body: data
     };
+    debug(JSON.stringify(options));
 
     request(options, (err, res, body) => {
-        if(res && res.statusCode != 200){
+        if(body)debug("BODY:" + JSON.stringify(body));
+        if(err)debug("ERR:" + JSON.stringify(err));
+        if(res)debug("RES:" + JSON.stringify(res));
+        
+        if(res && res.statusCode != 200){ 
             return callback(body,99)
         }
         
@@ -131,6 +151,7 @@ function postUploadFile(restEndPoint,user,pass,timeout,data,filename,callback){
 }
 
 function postDownloadFile(restEndPoint,user,pass,timeout,data,filename,callback){
+    debug("postDownloadFile Filename [" + filename + "] to " + restEndPoint);
     var options = {
         url: restEndPoint,
         json: true,
@@ -146,8 +167,13 @@ function postDownloadFile(restEndPoint,user,pass,timeout,data,filename,callback)
         },
         body: data
     };
+    debug(JSON.stringify(options));
 
     request(options, (err, res, body) => {
+        if(body)debug("BODY:" + JSON.stringify(body));
+        if(err)debug("ERR:" + JSON.stringify(err));
+        if(res)debug("RES:" + JSON.stringify(res));
+
         if(res && res.statusCode != 200){
             return callback(body,99);
         }
@@ -166,6 +192,7 @@ function postDownloadFile(restEndPoint,user,pass,timeout,data,filename,callback)
 }
 
 function downloadFile(data,filename,downloadCallback){
+    debug("Download File [" + filename +"] from: " + data.output.download_link);
     var link = data.output.download_link;
     let file = fs.createWriteStream(filename);
 
@@ -200,6 +227,7 @@ function downloadFile(data,filename,downloadCallback){
 }
 
 function del(restEndPoint,user,pass,timeout,data,callback){
+    debug("del to " + restEndPoint);
     var options = {
         url: restEndPoint,
         json: true,
@@ -215,7 +243,11 @@ function del(restEndPoint,user,pass,timeout,data,callback){
             password: pass
         }
     };
+    debug(JSON.stringify(options));
     request(options, (err, res, body) => {
+        if(body)debug("BODY:" + JSON.stringify(body));
+        if(err)debug("ERR:" + JSON.stringify(err));
+        if(res)debug("RES:" + JSON.stringify(res));
         if(res && res.statusCode != 200){
             return callback(body,99)
         }

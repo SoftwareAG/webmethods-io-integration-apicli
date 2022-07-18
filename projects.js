@@ -5,17 +5,16 @@
  */
 
 const request = require('./rest.js');
+const dbg = require('./debug.js');
 
 var domainName, username,password,timeout;
 var prettyprint = false;
 var url;
 
-function checkForErrors(inBody)
-{
-    //Error Codes
-    //Any error response
-    
+function debug(message){
+    dbg.message("<PROJECTS> " + message);
 }
+
 
 function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     domainName = inDomainName;
@@ -25,6 +24,9 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     prettyprint = inPrettyprint;
 
     url = "https://" + domainName + "/apis/v1/rest/projects";
+    debug("Username [" + username + "]");
+    debug("URL      [" + url + "]");
+    debug("Timeout  [" + timeout + "]");
 }
 
 /**
@@ -45,37 +47,97 @@ function processResponse(data,status){
     }
 }
 
+/* Projects */
 function list(projectId){
 
+    debug("List Projects ID[" + projectId + "]");
     if(projectId)url+="/" + projectId;
     request.get(url,username,password,timeout,processResponse);
 }
 
-function listAssets(projectId){
-    if(projectId)url+="/" + projectId + "/assets";
-    request.get(url,username,password,timeout,processResponse); 
-}
-
 function create(projectName){
+    debug("Create Project ID[" + projectName + "]");
     var data={"name":projectName};
     request.post(url,username,password,timeout,data,processResponse);
 }
 
 function update(projectId, projectName){
-
+    debug("Update Project ID[" + projectId + "] Name[" + projectName + "]");
     url += "/" + projectId;
     var data={"name":projectName};
     request.put(url,username,password,timeout,data,processResponse);
 }
 
 function del(projectId){
-
+    debug("Create Project ID[" + projectId + "]");
     url += "/" + projectId;
     var data={};
     request.httpDelete(url,username,password,timeout,data,processResponse);
 }
 
+/* Project Assets */
+function listAssets(projectId){
+    debug("List Assets [" + projectId + "]");
+    if(projectId)url+="/" + projectId + "/assets";
+    request.get(url,username,password,timeout,processResponse); 
+}
 
+/* Project Params */
+function listParam(projectId,paramId){
+    debug("List Params [" + projectId + "] Param ID [" + paramId + "]");
+    if(projectId)url+="/" + projectId + "/params";
+    if(paramId)url +="/" + paramId;
+    request.get(url,username,password,timeout,processResponse); 
+}
+
+function createParam(projectId,paramName,paramValue,required,isPassword){
+    debug("Create Param Project ID[" + projectId + "] Name [" + paramName + "] value ["+paramValue + "] required [" + required + "] isPassword [" + isPassword + "]" );
+    if(projectId)url+="/" + projectId + "/params";
+    var data={"key":paramName,"value":paramValue,"required":required,"isPassword":isPassword};
+    request.post(url,username,password,timeout,data,processResponse);
+}
+
+function updateParam(projectId,paramId,paramName,paramValue,required,isPassword){
+    debug("Update Param ProjectId [" + projectId + "] Param ID[" + paramId + "] Name [" + paramName + "] value ["+paramValue + "] required [" + required + "] isPassword [" + isPassword + "]" );
+    if(projectId)url+="/" + projectId + "/params";
+    if(paramId)url +="/" + paramId;
+    var data={"key":paramName,"value":paramValue,"required":required,"isPassword":isPassword};
+    request.put(url,username,password,timeout,data,processResponse);
+}
+
+function deleteParam(projectId,paramId){
+    debug("Delete Param ProjectId [" + projectId + "] Param ID[" + paramId + "]");
+    if(projectId)url+="/" + projectId + "/params";
+    if(paramId)url +="/" + paramId;
+    var data={};
+    request.httpDelete(url,username,password,timeout,data,processResponse);
+}
+
+
+/* Webhook APIs */
+function listWebhooks(projectId){
+    debug("List webhooks ProjectId [" + projectId + "]");
+    if(projectId)url+="/" + projectId + "/webhook-flows";
+    request.get(url,username,password,timeout,processResponse); 
+}
+
+function regenWebhook(projectId,workflowUid){
+    debug("List webhooks ProjectId [" + projectId + "] workflowUid [" + workflowUid + "]");
+    if(projectId)url+="/" + projectId + "/webhook-flows";
+    if(workflowUid)url +="/" + workflowUid + "/reset";
+    request.put(url,username,password,timeout,{},processResponse); 
+}
+
+function setWebhookAuth(projectId,workflowUid,authType){
+    debug("List webhooks ProjectId [" + projectId + "] workflowUid [" + workflowUid + "] auth type [" + authType + "]");
+    if(projectId)url+="/" + projectId + "/webhook-flows";
+    if(workflowUid)url +="/" + workflowUid + "/auth";
+    var data={"auth": authType};
+    request.post(url,username,password,timeout,data,processResponse); 
+}
+
+ 
+/* Deployment */
 
 /**
  * Pushes a deployment to a destination tenant
@@ -86,6 +148,7 @@ function del(projectId){
  * @param {assets to publish} assets 
  */
 function pub(projectId,publishName,targetTenantDomainName,targetUserId,targetUserPassword,assetsJson){
+    debug("Project Pub ProjectId [" + projectId + "] publishName [" + publishName + "] target Tenant [" + targetTenantDomainName + "]");
     //{"output":{"workflows":["fla73a20e13dd6736cf9c355","fl3cfd145262bbc5d44acff3"],"flows":["mapLeads"],"rest_api":[],"soap_api":[],"listener":[],"messaging":[]}}
     url += "/" + projectId + "/push";
    
@@ -111,9 +174,14 @@ function pub(projectId,publishName,targetTenantDomainName,targetUserId,targetUse
  */
 function deploy(projectName, version)
 {
+    debug("Project Deploy ProjectName [" + projectName + "] Version [" + version + "]");
     url += "/" + projectName + "/deploy";
     data={"version":parseInt(version)};
     request.post(url,username,password,timeout,data,processResponse);
 }   
 
-module.exports = { init, list, listAssets, create, update, del, pub, deploy};
+module.exports = { init, list, create, update, del, 
+    listAssets, pub, deploy, 
+    createParam,updateParam,listParam,deleteParam,
+    listWebhooks, regenWebhook, setWebhookAuth
+};

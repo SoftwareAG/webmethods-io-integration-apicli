@@ -8,6 +8,8 @@ var project = require('./projects.js');
 var role = require('./roles.js');
 var user = require('./users.js');
 var wf = require('./workflow.js');
+var theme = require('./themes.js');
+var recipe = require('./recipe.js');
 var dbg = require('./debug.js');
 var flowservice = require('./flowservice.js');
 var prettyprint = false;
@@ -339,6 +341,76 @@ program.command('project-deploy <projectName> <version>')
   project.deploy(projectName,version);
 });
 
+program.command('project-param <project-name> [param-uid]')
+.description('Lists all project parameters from given project name, or specific parameter with given paramater uid')
+.action((projectName,paramName) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  var resp = project.listParam(projectName,paramName);
+  if(resp)console.log(resp);
+});  
+
+program.command('project-param-create <project-name> <param-name> <param-value> <required> <is-password>')
+.description('Creates a project parameter with given values')
+.action((projectName,paramName,paramValue,required,isPassword) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  boolReq = false;
+  boolIsPass = false;
+  if(required.toUpperCase()=="TRUE")boolReq = true;
+  if(isPassword.toUpperCase()=="TRUE")boolIsPass = true;
+  var resp = project.createParam(projectName,paramName,paramValue,boolReq,boolIsPass);
+  if(resp)console.log(resp);
+});  
+
+program.command('project-param-update <project-name> <param-uid> <param-name> <param-value> <required> <is-password>')
+.description('Updates a project parameter matching the provided UID with given values')
+.action((projectName,paramUid,paramName,paramValue,required,isPassword) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  boolReq = false;
+  boolIsPass = false;
+  if(required.toUpperCase()=="TRUE")boolReq = true;
+  if(isPassword.toUpperCase()=="TRUE")boolIsPass = true;
+  var resp = project.updateParam(projectName,paramUid,paramName,paramValue,boolReq,boolIsPass);
+  if(resp)console.log(resp);
+});
+
+program.command('project-param-delete <project-name> <param-uid>')
+.description('Deletes a project parameter mathcing the given paramater uid')
+.action((projectName,paramUid) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  var resp = project.deleteParam(projectName,paramUid);
+  if(resp)console.log(resp);
+}); 
+
+
+program.command('project-webhooks-list <project-id>')
+.description('List webhooks in a project')
+.action((projectId) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  project.listWebhooks(projectId);
+});
+
+program.command('project-webhooks-regenerate <project-id> <workflow-uid>')
+.description('Regenerate a webhook in a project for a given workflow UID')
+.action((projectId,workflowUid) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  project.regenWebhook(projectId,workflowUid);
+});
+
+program.command('project-webhooks-auth <project-id> <workflow-uid> <auth-type>')
+.description('Set authenatication type (none,login,token) for a webhook in a project for a given workflow UID')
+.action((projectId,workflowUid,authType) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  project.setWebhookAuth(projectId,workflowUid,authType);
+});
+
+
 /**
  * ------------------------------------------------------------------------------------------------------------------------------------
  * ROLES
@@ -413,7 +485,7 @@ program.command('workflow-export <project-id> <workflow-id> <filename>')
 .description('Export workflow with id <workflow-id> from project <project-id>')
 .action((projectId, workflowId, filename) => {
   checkOptions();
-  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint,projectId);
   wf.exportwf(workflowId,filename);
 });
 
@@ -422,7 +494,7 @@ program.command('workflow-import <project-id> <filename>')
 .action((projectId, filename) => {
   checkOptions();
   debug("Importing Workflow");
-  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint,projectId);
   wf.importwf(filename);
 });
 
@@ -431,7 +503,7 @@ program.command('workflow-delete <project-id> <workflow-id>')
 .action((projectId, workflowId) => {
   checkOptions();
   debug("Deleting Workflow [" + workflowId + "]");
-  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint,projectId);
   wf.deletewf(workflowId);
 });
 
@@ -439,7 +511,7 @@ program.command('workflow-execute <project-id> <workflow-id>')
  .description('Execute workflow <workflow-id> from project <project-id>')
 .action((projectId, workflowId) => {
   checkOptions();
-  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint,projectId);
   wf.runwf(workflowId)
 });
 
@@ -460,7 +532,7 @@ program.command('flowservice-export <project-id> <flow-name> <file-name>')
 .description('Export FlowService with name <flow-name> from project <project-id>')
 .action((projectId, flowName,filename) => {
   checkOptions();
-  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint,projectId);
   flowservice.exportFlowService(flowName,filename);
 });
 
@@ -468,7 +540,7 @@ program.command('flowservice-import <project-id> <filename>')
 .description('Import FlowService from <filename> into project <project-id>')
 .action((projectId, filename) => {
   checkOptions();
-  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint,projectId);
   flowservice.importFlowService(filename);
 });
 
@@ -476,7 +548,7 @@ program.command('flowservice-delete <project-id> <flow-name>')
 .description('Delete FlowService <flow-name> from project <project-id>')
 .action((projectId, flowName) => {
   checkOptions();
-  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint,projectId);
   flowservice.deleteFlowService(flowName);
 });
 
@@ -484,11 +556,88 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
  .description('Execute FlowService <flow-name> from project <project-id> with data <input-json>')
 .action((projectId, flowName,inputJson) => {
   checkOptions();
-  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  flowservice.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint,projectId);
   flowservice.runFlowService(flowName,inputJson);
 });
 
+/**
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * THEMES
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
+ program.command('theme [theme-uid]')
+ .description('Lists themes or views an individual theme, specified via uid')
+ .action((themeUid) => {
+   checkOptions();
+   theme.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   theme.list(themeUid);
+ });  
+ 
+ 
+ program.command('theme-create <theme-name> <theme-description> <theme-object> [footer-text] [about-page]')
+ .description('Create theme with given data')
+ .action((themeName,themeDescription,themeObject,footerText,aboutPage) => {
+   checkOptions();
+   theme.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   theme.create(themeName,themeDescription,themeObject,footerText,aboutPage);
+ });
 
+ program.command('theme-update <theme-uid> <theme-name> <theme-description> <theme-object> [footer-text] [about-page]')
+ .description('Update theme with the given UID with given data')
+ .action((themeUid, themeName,themeDescription,themeObject,footerText,aboutPage) => {
+   checkOptions();
+   theme.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   theme.update(themeUid, themeName,themeDescription,themeObject,footerText,aboutPage);
+ });
+
+ program.command('theme-delete <theme-uid>')
+ .description('Delete theme with the given UID')
+ .action((themeUid) => {
+   checkOptions();
+   theme.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   theme.del(themeUid);
+ });
+
+ /**
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * Recipes
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
+ 
+ program.command('recipe [recipe-uid]')
+ .description('List all Workflow recipes, or get a single recipe with a given recipe UID')
+ .action((recipeUid) => {
+   checkOptions();
+   recipe.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   recipe.list(recipeUid);
+ });
+
+ program.command('recipe-delete <recipe-uid>')
+ .description('Delete Workflow recipe with a given recipe UID')
+ .action((recipeUid) => {
+   checkOptions();
+   recipe.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   recipe.del(recipeUid);
+ });
+
+ program.command('recipe-create <filename>')
+.description('Create Workfllow Receipt from file <filename>')
+.action((filename) => {
+  checkOptions();
+  debug("Importing Workflow");
+  recipe.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  recipe.create(filename);
+});
+
+ /*
+ program.command('project-delete <project-id>')
+ .description('Delete project with given id')
+ .action((projectId) => {
+   checkOptions();
+   project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   project.del(projectId);
+ });*/
+ 
 program.parse();
 
 

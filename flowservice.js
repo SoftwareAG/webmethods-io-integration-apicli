@@ -8,27 +8,39 @@ const rest = require('./rest.js');
 const dbg = require('./debug.js');
 
 
-var domainName, username,password,timeout;
+var domainName, username,password,timeout,prettyprint;
 var url;
 
 function debug(message){
     dbg.message("<FLOWSERVICE> " + message);
 }
 
-function init(inDomainName, inUsername, inPassword,inTimeout,projectId){
+function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyPrint,projectId){
     domainName = inDomainName;
     username = inUsername;
     password = inPassword;
     timeout = inTimeout;
+    prettyprint = inPrettyPrint;
+
     url = "https://" + domainName + "/enterprise/v1/rest/projects/" + projectId ;
     debug("Username [" + username + "]");
     debug("URL      [" + url + "]");
     debug("Timeout  [" + timeout + "]");
 }
 
-function processResponse(data,status,filename){
-    debug("Processing response message");
-    console.log(JSON.stringify(data));
+/**
+ * Call back function to process REST response
+ * @param {return data from REST request} data 
+ * @param {status} status 
+ */
+ function processResponse(data,status){
+    if(prettyprint==true){
+        console.log(JSON.stringify(data,null,4));
+    }
+    else{
+        console.log(JSON.stringify(data));
+    }
+    
     if(status!=0){
         process.exit(status);
     }

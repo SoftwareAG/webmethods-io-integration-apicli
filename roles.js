@@ -31,9 +31,9 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     timeout = inTimeout;
     prettyprint = inPrettyprint;
     url = "https://" + domainName + "/apis/v1/rest";
-    //console.log("Username [" + username + "]");
-    //console.log("URL      [" + url + "]");
-    //console.log("Timeout  [" + timeout + "]");
+    debug("Username [" + username + "]");
+    debug("URL      [" + url + "]");
+    debug("Timeout  [" + timeout + "]");
 }
 
 /**
@@ -56,12 +56,14 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
 
 
 function list(roleId){
+    debug("List [" + roleId + "]");
     url+="/roles";
     if(roleId)url+="/" + roleId
     request.get(url,username,password,timeout,processResponse);
 }
 
 function parseRoleListInput(rolesList) {
+    debug("Parsing role List [" + rolesLists + "]");
     var arr = rolesList.split(";");
     var jsonStr = '[';
     for (var rolesCount = 0; rolesCount < arr.length; rolesCount++) {
@@ -82,6 +84,7 @@ function parseRoleListInput(rolesList) {
 }
 
 function insert(name,description,projects){
+    debug("Insert [" + name + "]");
     url+="/roles";
     projects = parseRoleListInput(projects);
     var data={"name":name,"description":description, projects};
@@ -89,6 +92,7 @@ function insert(name,description,projects){
 }
 
 function update(roleId, name,description,projects){
+    debug("Update [" + roleId + "]");
     url+="/roles/" + roleId;
     projects = parseRoleListInput(projects);
     var data={"name":name,"description":description, projects};
@@ -96,8 +100,8 @@ function update(roleId, name,description,projects){
 }
 
 function del(roleId){
+    debug("Delte [" + roleId + "]");
     url+="/roles/" + roleId;
-    debug("Delte URL: " + url);
     request.del(url,username,password,timeout,undefined,processResponse);
 }
 
