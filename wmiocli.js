@@ -77,7 +77,7 @@ const program = new Command();
 program
 
 //Program Info
-  .version('2022.07.1')
+  .version('2022.07.2')
 
 //required options
   .option('-d, --domain <tenantDomain>', 'Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"')
