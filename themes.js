@@ -150,6 +150,19 @@ function del(themeUid){
     request.httpDelete(url,username,password,timeout,data,processResponse);
 }
 
+function activate(themeUid){
+    debug("Activate Theme UID [" + themeUid + "]");
+    url += "/" + themeUid + "/activate";
+    var data={};
+    request.put(url,username,password,timeout,data,processResponse);
+}
+
+function deactivate(themeUid){
+    debug("Deactivate Theme UID [" + themeUid + "]");
+    url += "/" + themeUid + "/deactivate";
+    var data={};
+    request.put(url,username,password,timeout,data,processResponse);
+}
 
 //, update, del, default, activate, deactivate
-module.exports = {init, list, create,update,del};
+module.exports = {init, list, create,update,del,activate,deactivate};

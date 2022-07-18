@@ -77,7 +77,7 @@ const program = new Command();
 program
 
 //Program Info
-  .version('2022.07.2')
+  .version('2022.07.3')
 
 //required options
   .option('-d, --domain <tenantDomain>', 'Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"')
@@ -157,20 +157,79 @@ Examples:
     -p password 
      project-assets fl65d3aa87fc1783ea5cf8c8
 
-  \x1b[32m/Publish Project to another tenant:\x1b[0m
+  \x1b[32mPublish Project to another tenant:\x1b[0m
   $ node wmiocli.js 
     -d tenant.int-aws-us.webmethods.io 
     -u user 
     -p password 
-     project-publish fl65d3aa87fc1783ea5cf8c8 'My deployment' 'target.int-aws-us.webmethods.io' 'targetuser' 'targetpassword' '{"output":{"workflows":["fla73a20e13dd6736cf9c355","fl3cfd145262bbc5d44acff3"],"flows":["mapLeads"],"rest_api":[],"soap_api":[],"listener":[],"messaging":[]}}'  
+     project-publish fl65d3aa87fc1783ea5cf8c8 'My deployment' 'target.int-aws-us.webmethods.io' 
+     'targetuser' 'targetpassword' 
+     '{"output":{"workflows":["fla73a20e13dd6736cf9c355","fl3cfd145262bbc5d44acff3"],
+     "flows":["mapLeads"],"rest_api":[],"soap_api":[],"listener":[],"messaging":[]}}'  
 
   
-  \x1b[32m/Deploy published Project in the tenant with the given name and deploy version:\x1b[0m
+  \x1b[32mDeploy published Project in the tenant with the given name and deploy version:\x1b[0m
   $ node wmiocli.js 
     -d tenant.int-aws-us.webmethods.io 
     -u user 
     -p password 
-    project-deploy projectName 1   
+    project-deploy projectName 1  
+    
+  
+  \x1b[32mList Project Workflow Parameters or gets an individual where name is specified\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-param projectName [param-name]
+
+  \x1b[32mCreate Project Workflow Parameter\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-param-create projectName param-name param-value required isPassword
+    
+    e.g. node wmiocli.js -d env -u user -p pass project-param-create project name dave false false
+
+  \x1b[32mUpdate Project Workflow Parameter\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-param-update projectName param-uid param-name param-value required isPassword
+
+  \x1b[32mDelete Project Workflow Parameter\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-param-delete projectName param-uid
+
+  \x1b[32mProject webhooks List\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-webhooks-list [project-uid]
+
+  \x1b[32mRegenerate webhook token\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-webhooks-regenerate project-uid webhook-uid
+
+  \x1b[32mChange webhook Auth\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-webhooks-auth project-uid webhook-uid auth-type<none,login,token>
+
+    e.g.
+    node wmiocli.js -d env -u user -p pass project-webhooks-auth flf1111 flf2222 login
+    
 
   \x1b[4mWorkflow\x1b[0m
 
@@ -271,8 +330,90 @@ Examples:
     -d tenant.int-aws-us.webmethods.io 
     -u user
     -p password 
-    role-delete 'roleId'       
+    role-delete 'roleId'
+    
+  
+  \x1b[4mRecipes\x1b[0m
+
+  \x1b[32mGet recipe list or individual recipe\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    recipe [recipe-Uid]
+
+  \x1b[32mCreates a Workflow recipe from a workflow export\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    recipe-create export-flf111111.zip
+
+  \x1b[32mDeletes a Workflow recipe with the provided UID\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    recipe-delete fl1771d591cfb4f31e558daf
+
+
+  \x1b[4mThemes\x1b[0m
+
+  \x1b[32mLists whitelabel themes\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    theme [theme-uid]
+
+    The theme settings returned can be use as a way to create the theme.
+    You can use jq to retrieve the theme settings by piping the output to jq, e.g.
+
+    node wmiocli.js -d env -u user -p pass theme fl40018d9a1a273bb8aa92bf | jq -c .output.settings.theme > ~/dracula-theme.txt
+
+  \x1b[32mDeletes a whitelabel theme\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    theme-delete [theme-uid]  
+
+  \x1b[32mCreates a new whitelabel theme\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    theme-create dracula 'desc' [theme-settings] "Footer Text" "About Page"
+
+    Theme settings can be used from the list example above, e.g.
+    node wmiocli.js -d env -u user -p pass theme-create dracula7 'updated' "\`cat ~/dracula-theme.txt\`" 'Footer' 'About'
+
+  \x1b[32mUpdates a whitelabel theme\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    theme-update themeid dracula 'desc' [theme-settings] "Footer Text" "About Page"
+    
+    Theme settings can be used from the list example above, e.g.
+    node wmiocli.js -d env -u user -p pass theme-update themeid dracula7 'updated' "\`cat ~/dracula-theme.txt\`" 'Footer' 'About'    
+
+  \x1b[32mActivates a whitelabel theme\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    theme-activate [theme-uid]  
+
+  \x1b[32mDeactivates a whitelabel theme\x1b[0m
+  $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    theme-deactivate [theme-uid]   
+
 `)
+
 
   .showSuggestionAfterError()
 ;
@@ -596,6 +737,22 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
    checkOptions();
    theme.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
    theme.del(themeUid);
+ });
+
+ program.command('theme-activate <theme-uid>')
+ .description('Activate theme with the given UID')
+ .action((themeUid) => {
+   checkOptions();
+   theme.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   theme.activate(themeUid);
+ });
+
+ program.command('theme-deactivate <theme-uid>')
+ .description('Deactivate theme with the given UID')
+ .action((themeUid) => {
+   checkOptions();
+   theme.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+   theme.deactivate(themeUid);
  });
 
  /**
