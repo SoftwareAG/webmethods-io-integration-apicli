@@ -13,7 +13,7 @@ var wf = require('./workflow.js');
 var theme = require('./themes.js');
 var recipe = require('./recipe.js');
 var flowservice = require('./flowservice.js');
-var unofficial = require('./unofficial.js');
+var experimental = require('./experimental.js');
 
 dbg = require('./debug.js');
 prettyprint = false;
@@ -522,55 +522,55 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
 
  /**
  * ------------------------------------------------------------------------------------------------------------------------------------
- * unofficial non-public APIs
+ * experimental non-public APIs
  * ------------------------------------------------------------------------------------------------------------------------------------
  */
-  program.command('unofficial-user')
+  program.command('experimental-user')
    .description('Get User information')
    .action(() => {
       checkOptions();
-      unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
-      unofficial.user();
+      experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+      experimental.user();
   });
 
-  program.command('unofficial-stages')
+  program.command('experimental-stages')
   .description('Get Stage information')
   .action(() => {
      checkOptions();
-     unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
-     unofficial.stages();
+     experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+     experimental.stages();
   });
 
-  program.command('unofficial-project-workflows <project-id>')
-  .description('Get Information about project workflows')
+  program.command('experimental-project-workflows <project-id>')
+  .description('Get information about project workflows')
   .action((projectId) => {
       checkOptions();
-      unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
-      unofficial.projectWorkflows(projectId);
+      experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+      experimental.projectWorkflows(projectId);
   });
 
-  program.command('unofficial-project-flowservices <project-id>')
-  .description('Get Information about project FlowServices')
+  program.command('experimental-project-flowservices <project-id>')
+  .description('Get information about project FlowServices')
   .action((projectId) => {
     checkOptions();
-    unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
-    unofficial.projectFlowservices(projectId);
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.projectFlowservices(projectId);
   });
 
-  program.command('unofficial-project-connector-accounts <project-id>')
-  .description('Get Information about project connector acconts')
+  program.command('experimental-project-connector-accounts <project-id>')
+  .description('Get Information about project connector accounts')
   .action((projectId) => {
     checkOptions();
-    unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
-    unofficial.connectorAccounts(projectId);
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.connectorAccounts(projectId);
   });
 
-  program.command('unofficial-project-connector-accontw-wf-config <project-id>')
-  .description('Get Configuratoin Information about project connector acconts')
+  program.command('experimental-project-connector-account-wf-config <project-id>')
+  .description('Get configuration information about project connector accounts')
   .action((projectId) => {
     checkOptions();
-    unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
-    unofficial.getProjectAccountConfig(projectId);
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.getProjectAccountConfig(projectId);
   });
  
 program.parse();

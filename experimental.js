@@ -5,7 +5,7 @@
  */
 
 // ------------------------------------------------------------------------------
-//  PLEASE NOTE - These functions are NOT provided by NON public APIs, and
+//  PLEASE NOTE - These functions are provided by NON public APIs, and
 //  therefore unsupported - use these at your own risk!
 // ------------------------------------------------------------------------------
 
@@ -27,12 +27,12 @@ var finalCall;
 var loginStageCounter = 0;
 
 function debug(message){
-    dbg.message("<UNOFFICIAL> " + message);
+    dbg.message("<EXPERIMENTAL> " + message);
 }
 
 function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     
-    dbg.message("UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK");
+    dbg.message("EXPERIMENTAL/UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK");
     domainName = inDomainName;
     username = inUsername;
     password = inPassword;
