@@ -6,25 +6,58 @@
  */
 
 const request = require('./rest.js');
-const dbg = require('./debug.js');
 
-var domainName, username,password,timeout;
+var domainName, username, password, timeout;
 var prettyprint;
 var url;
 
-function checkForErrors(inBody)
-{
+function checkForErrors(inBody) {
     //Error Codes
     //Any error response
-    
+
 }
 
-function debug(message){
+function debug(message) {
     dbg.message("<ROLES> " + message);
 }
 
+function help() {
+    return `
+\x1b[4mRoles\x1b[0m
 
-function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
+\x1b[32mGet roles list or individual role\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    role [role-name]
+
+\x1b[32mCreates a role\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    role-create 'rolename' 'role description' 'project 1 name,r,w,e;project 2 name,r;'
+
+\x1b[32mUpdates a role with a provided Id\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    role-update 'roleId' 'rolename' 'role description' 'project 1 name,r,w,e;project 2 name,r;'   
+
+\x1b[32mDelete a role with a provided Id\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    role-delete 'roleId'
+    
+`;
+}
+
+
+function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyprint) {
     domainName = inDomainName;
     username = inUsername;
     password = inPassword;
@@ -41,25 +74,25 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
  * @param {return data from REST request} data 
  * @param {status} status 
  */
- function processResponse(data,status){
-    if(prettyprint==true){
-        console.log(JSON.stringify(data,null,4));
+function processResponse(data, status) {
+    if (prettyprint == true) {
+        console.log(JSON.stringify(data, null, 4));
     }
-    else{
+    else {
         console.log(JSON.stringify(data));
     }
-    
-    if(status!=0){
+
+    if (status != 0) {
         process.exit(status);
     }
 }
 
 
-function list(roleId){
+function list(roleId) {
     debug("List [" + roleId + "]");
-    url+="/roles";
-    if(roleId)url+="/" + roleId
-    request.get(url,username,password,timeout,processResponse);
+    url += "/roles";
+    if (roleId) url += "/" + roleId
+    request.get(url, username, password, timeout, processResponse);
 }
 
 function parseRoleListInput(rolesList) {
@@ -83,26 +116,26 @@ function parseRoleListInput(rolesList) {
     return projects;
 }
 
-function insert(name,description,projects){
+function insert(name, description, projects) {
     debug("Insert [" + name + "]");
-    url+="/roles";
+    url += "/roles";
     projects = parseRoleListInput(projects);
-    var data={"name":name,"description":description, projects};
-    request.post(url,username,password,timeout,data,processResponse);
+    var data = { "name": name, "description": description, projects };
+    request.post(url, username, password, timeout, data, processResponse);
 }
 
-function update(roleId, name,description,projects){
+function update(roleId, name, description, projects) {
     debug("Update [" + roleId + "]");
-    url+="/roles/" + roleId;
+    url += "/roles/" + roleId;
     projects = parseRoleListInput(projects);
-    var data={"name":name,"description":description, projects};
-    request.put(url,username,password,timeout,data,processResponse);
+    var data = { "name": name, "description": description, projects };
+    request.put(url, username, password, timeout, data, processResponse);
 }
 
-function del(roleId){
+function del(roleId) {
     debug("Delte [" + roleId + "]");
-    url+="/roles/" + roleId;
-    request.del(url,username,password,timeout,undefined,processResponse);
+    url += "/roles/" + roleId;
+    request.del(url, username, password, timeout, undefined, processResponse);
 }
 
-module.exports = { init, list, insert, update, del };
+module.exports = {help, init, list, insert, update, del };

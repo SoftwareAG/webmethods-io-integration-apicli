@@ -15,6 +15,42 @@ function debug(message){
     dbg.message("<FLOWSERVICE> " + message);
 }
 
+function help(){
+    return `
+\x1b[4mFlowService\x1b[0m
+
+\x1b[32mExport FlowService from a given project (identified from URL in webMethods.io when in FlowEditor
+i.e. https://tenant.int-aws-us.webmethods.io/#/projects/\x1b[1mfl65d3aa87fc1783ea5cf8c8\x1b[0m\x1b[32m/flow-editor/\x1b[1mmyFlowService\x1b[0m\x1b[32m):\x1b[0m\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    flowservice-export fl65d3aa87fc1783ea5cf8c8 myFlowService export.zip
+
+\x1b[32mImport Flowservice from a given file into a project \x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    flowservice-import fl65d3aa87fc1783ea5cf8c8 export.zip
+
+\x1b[32mDelete FlowService from a given project\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    flowservice-delete fl65d3aa87fc1783ea5cf8c8 myFlowService
+
+\x1b[32mExecute a FlowService from a given project\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    flowservice-execute fl65d3aa87fc1783ea5cf8c8 myFlowService 
+
+`;
+}
+
 function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyPrint,projectId){
     domainName = inDomainName;
     username = inUsername;
@@ -96,4 +132,4 @@ function deleteFlowService(flowId){
     rest.del(url,username,password,timeout,{},processResponse);
 }
 
-module.exports = { init, exportFlowService, importFlowService, runFlowService, deleteFlowService };
+module.exports = {help, init, exportFlowService, importFlowService, runFlowService, deleteFlowService };

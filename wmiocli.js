@@ -3,25 +3,30 @@
  * Copyright 2022 Software AG
  * Apache-2.0
  */
-
+const { Command, Option } = require('commander');
+const { exit } = require('process');
+const readline = require('readline-sync');
 var project = require('./projects.js');
 var role = require('./roles.js');
 var user = require('./users.js');
 var wf = require('./workflow.js');
 var theme = require('./themes.js');
 var recipe = require('./recipe.js');
-var dbg = require('./debug.js');
 var flowservice = require('./flowservice.js');
-var prettyprint = false;
+var unofficial = require('./unofficial.js');
+
+dbg = require('./debug.js');
+prettyprint = false;
+proxy = undefined;
+caCertFile = undefined;
+ignoreTLS = false;
+
 var compat = false;
 
 var tenantDomain;
 var tenantUser;
 var tenantPw;
 
-const { Command, Option } = require('commander');
-const { exit } = require('process');
-const readline = require('readline-sync');
 
 function readFromConsole(question,isPassword)
 {
@@ -42,6 +47,21 @@ function checkOptions(){
     dbg.enableDebug();
   }
 
+  if(program.opts().proxy !== undefined)
+  {
+    proxy = program.opts().proxy;
+    debug("Using Proxy: " + proxy);
+  }
+  if(program.opts().caCert !== undefined)
+  {
+    caCertFile = program.opts().caCert;
+    debug("Using CA Cert File: " + caCertFile);
+  }
+
+  ignoreTLS = program.opts().ignoreTLSErrors;
+
+
+
   if(program.opts().prettyprint == true)
   {
     prettyprint = true;
@@ -52,6 +72,10 @@ function checkOptions(){
   }
   else{
     tenantDomain = program.opts().domain
+    if(tenantDomain.indexOf("http")==0){
+      console.log("Please provide the tenant domain name only (without https:// prefix and any URL suffix\ne.g. 'tenant.int-aws-us.webmethods.io'");
+      process.exit(1);
+    }
   }
 
   if(program.opts().user == undefined){
@@ -71,9 +95,10 @@ function checkOptions(){
 }
 
 function debug(message){
-  dbg.message("<WMIOCLI> " + message)
+  dbg.message("<MAIN> " + message);
 }
 const program = new Command();
+
 program
 
 //Program Info
@@ -84,11 +109,15 @@ program
   .option('-u, --user <userid>', 'Tenant User ID')
   .option('-p, --password <password>', 'Tenant User Password')
   //.requiredOption('-p, --password <password>', 'Tenant User Password')
-  
+    
 //options
   .addOption(new Option('-t, --timeout <delay>', 'timeout in seconds').default(60, 'one minute'))
   .option('--prettyprint','Pretty Print JSON output')
   .option('--verbose','Verbose output useful for diagnosing issues')
+
+  .option('--proxy <proxyURL>','URL for proxy server if required')
+  .option('--caCert <path-to-cert>','Path to a CACert PEM file if required')
+  .option('--ignoreTLSErrors','Ignore TLS errors')
 
   
 //Additional help
@@ -98,322 +127,27 @@ program
 │\x1b[0m This tool provides command line access to the webMethods.io Integration APIs\x1b[34m │
 │\x1b[0m Intended to aid usage within DevOps Scenarios for asset deployment          \x1b[34m │
 └──────────────────────────────────────────────────────────────────────────────┘\x1b[0m
-`)
+
+
+  `)
 
   .addHelpText('after', `
 
 Examples:
 
-  \x1b[4mHelp\x1b[0m
+\x1b[4mHelp\x1b[0m
 
-  \x1b[32mShow the command line help:\x1b[0m
-  $ node wmiocli.js --help
+\x1b[32mShow the command line help:\x1b[0m
+$ node wmiocli.js --help
 
-
-  \x1b[4mProjects\x1b[0m
-
-  \x1b[32mList projects in a tenant:\x1b[0m
-  $ node wmiocli.js -d tenant.int-aws-us.webmethods.io -u user -p password project
-
-  \x1b[32mView individual project using project ID (indentified from URL in webMethods.io when in a project, i.e. https://tenant.int-aws-us.webmethods.io/#/projects/\x1b[1mfl65d3aa87fc1783ea5cf8c8\x1b[32m/workflows):\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project fl65d3aa87fc1783ea5cf8c8
-
-  \x1b[32mView individual project with given project name:\x1b[0m
-    $ node wmiocli.js 
-      -d tenant.int-aws-us.webmethods.io 
-      -u user 
-      -p password 
-      project Default
-
-  \x1b[32mView Project assets from project with given name:\x1b[0m
-    $ node wmiocli.js 
-      -d tenant.int-aws-us.webmethods.io 
-      -u user 
-      -p password 
-      project-assets Default      
-  
-  \x1b[32mUpdate Project name:\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-update fl65d3aa87fc1783ea5cf8c8 "my New Name"
-
-  \x1b[32mDelete Project:\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-delete fl65d3aa87fc1783ea5cf8c8
-  
-  \x1b[32mGet Project Assets:\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-     project-assets fl65d3aa87fc1783ea5cf8c8
-
-  \x1b[32mPublish Project to another tenant:\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-     project-publish fl65d3aa87fc1783ea5cf8c8 'My deployment' 'target.int-aws-us.webmethods.io' 
-     'targetuser' 'targetpassword' 
-     '{"output":{"workflows":["fla73a20e13dd6736cf9c355","fl3cfd145262bbc5d44acff3"],
-     "flows":["mapLeads"],"rest_api":[],"soap_api":[],"listener":[],"messaging":[]}}'  
-
-  
-  \x1b[32mDeploy published Project in the tenant with the given name and deploy version:\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-deploy projectName 1  
-    
-  
-  \x1b[32mList Project Workflow Parameters or gets an individual where name is specified\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-param projectName [param-name]
-
-  \x1b[32mCreate Project Workflow Parameter\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-param-create projectName param-name param-value required isPassword
-    
-    e.g. node wmiocli.js -d env -u user -p pass project-param-create project name dave false false
-
-  \x1b[32mUpdate Project Workflow Parameter\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-param-update projectName param-uid param-name param-value required isPassword
-
-  \x1b[32mDelete Project Workflow Parameter\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-param-delete projectName param-uid
-
-  \x1b[32mProject webhooks List\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-webhooks-list [project-uid]
-
-  \x1b[32mRegenerate webhook token\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-webhooks-regenerate project-uid webhook-uid
-
-  \x1b[32mChange webhook Auth\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user 
-    -p password 
-    project-webhooks-auth project-uid webhook-uid auth-type<none,login,token>
-
-    e.g.
-    node wmiocli.js -d env -u user -p pass project-webhooks-auth flf1111 flf2222 login
-    
-
-  \x1b[4mWorkflow\x1b[0m
-
-  \x1b[32mExport Workflow from a given project (identified from URL in webMethods.io when in workflow canvas, 
-  i.e. https://tenant.int-aws-us.webmethods.io/#/projects/\x1b[1mfl65d3aa87fc1783ea5cf8c8\x1b[0m\x1b[32m/workflows/\x1b[1mfl52232a2dfafbd6536963d7\x1b[0m\x1b[32m/edit):\x1b[0m\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    workflow-export fl65d3aa87fc1783ea5cf8c8 fl52232a2dfafbd6536963d7 export.zip
-
-  \x1b[32mImport Workflow from a given file into a project \x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    workflow-import fl65d3aa87fc1783ea5cf8c8 export.zip
-
-  \x1b[32mDelete Workflow from a given project\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    workflow-delete fl65d3aa87fc1783ea5cf8c8 fl52232a2dfafbd6536963d7
-
-  \x1b[32mExecute a Workflow from a given project\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    workflow-execute fl65d3aa87fc1783ea5cf8c8 fl52232a2dfafbd6536963d7          
-
-  \x1b[32mGet Workflow execution status from a given project\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    workflow-status fl65d3aa87fc1783ea5cf8c8 vbid3d247cd26aa5e19354e1fc6951766a3d19c049bee11d   
-          
-          
-  \x1b[4mFlowService\x1b[0m
-
-  \x1b[32mExport FlowService from a given project (identified from URL in webMethods.io when in FlowEditor
-  i.e. https://tenant.int-aws-us.webmethods.io/#/projects/\x1b[1mfl65d3aa87fc1783ea5cf8c8\x1b[0m\x1b[32m/flow-editor/\x1b[1mmyFlowService\x1b[0m\x1b[32m):\x1b[0m\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    flowservice-export fl65d3aa87fc1783ea5cf8c8 myFlowService export.zip
-
-  \x1b[32mImport Flowservice from a given file into a project \x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    flowservice-import fl65d3aa87fc1783ea5cf8c8 export.zip
-
-  \x1b[32mDelete FlowService from a given project\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    flowservice-delete fl65d3aa87fc1783ea5cf8c8 myFlowService
-
-  \x1b[32mExecute a FlowService from a given project\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    flowservice-execute fl65d3aa87fc1783ea5cf8c8 myFlowService     
-
-    
-  \x1b[4mRoles\x1b[0m
-
-  \x1b[32mGet roles list or individual role\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    role [role-name]
-
-  \x1b[32mCreates a role\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    role-create 'rolename' 'role description' 'project 1 name,r,w,e;project 2 name,r;'
-
-  \x1b[32mUpdates a role with a provided Id\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    role-update 'roleId' 'rolename' 'role description' 'project 1 name,r,w,e;project 2 name,r;'   
-
-  \x1b[32mDelete a role with a provided Id\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    role-delete 'roleId'
-    
-  
-  \x1b[4mRecipes\x1b[0m
-
-  \x1b[32mGet recipe list or individual recipe\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    recipe [recipe-Uid]
-
-  \x1b[32mCreates a Workflow recipe from a workflow export\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    recipe-create export-flf111111.zip
-
-  \x1b[32mDeletes a Workflow recipe with the provided UID\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    recipe-delete fl1771d591cfb4f31e558daf
-
-
-  \x1b[4mThemes\x1b[0m
-
-  \x1b[32mLists whitelabel themes\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    theme [theme-uid]
-
-    The theme settings returned can be use as a way to create the theme.
-    You can use jq to retrieve the theme settings by piping the output to jq, e.g.
-
-    node wmiocli.js -d env -u user -p pass theme fl40018d9a1a273bb8aa92bf | jq -c .output.settings.theme > ~/dracula-theme.txt
-
-  \x1b[32mDeletes a whitelabel theme\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    theme-delete [theme-uid]  
-
-  \x1b[32mCreates a new whitelabel theme\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    theme-create dracula 'desc' [theme-settings] "Footer Text" "About Page"
-
-    Theme settings can be used from the list example above, e.g.
-    node wmiocli.js -d env -u user -p pass theme-create dracula7 'updated' "\`cat ~/dracula-theme.txt\`" 'Footer' 'About'
-
-  \x1b[32mUpdates a whitelabel theme\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    theme-update themeid dracula 'desc' [theme-settings] "Footer Text" "About Page"
-    
-    Theme settings can be used from the list example above, e.g.
-    node wmiocli.js -d env -u user -p pass theme-update themeid dracula7 'updated' "\`cat ~/dracula-theme.txt\`" 'Footer' 'About'    
-
-  \x1b[32mActivates a whitelabel theme\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    theme-activate [theme-uid]  
-
-  \x1b[32mDeactivates a whitelabel theme\x1b[0m
-  $ node wmiocli.js 
-    -d tenant.int-aws-us.webmethods.io 
-    -u user
-    -p password 
-    theme-deactivate [theme-uid]   
-
-`)
-
+`
+    + project.help()
+    + wf.help()
+    + flowservice.help()
+    + role.help()
+    + recipe.help() 
+    + theme.help()
+)   
 
   .showSuggestionAfterError()
 ;
@@ -786,14 +520,58 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
   recipe.create(filename);
 });
 
- /*
- program.command('project-delete <project-id>')
- .description('Delete project with given id')
- .action((projectId) => {
-   checkOptions();
-   project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
-   project.del(projectId);
- });*/
+ /**
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * unofficial non-public APIs
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
+  program.command('unofficial-user')
+   .description('Get User information')
+   .action(() => {
+      checkOptions();
+      unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+      unofficial.user();
+  });
+
+  program.command('unofficial-stages')
+  .description('Get Stage information')
+  .action(() => {
+     checkOptions();
+     unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+     unofficial.stages();
+  });
+
+  program.command('unofficial-project-workflows <project-id>')
+  .description('Get Information about project workflows')
+  .action((projectId) => {
+      checkOptions();
+      unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+      unofficial.projectWorkflows(projectId);
+  });
+
+  program.command('unofficial-project-flowservices <project-id>')
+  .description('Get Information about project FlowServices')
+  .action((projectId) => {
+    checkOptions();
+    unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    unofficial.projectFlowservices(projectId);
+  });
+
+  program.command('unofficial-project-connector-accounts <project-id>')
+  .description('Get Information about project connector acconts')
+  .action((projectId) => {
+    checkOptions();
+    unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    unofficial.connectorAccounts(projectId);
+  });
+
+  program.command('unofficial-project-connector-accontw-wf-config <project-id>')
+  .description('Get Configuratoin Information about project connector acconts')
+  .action((projectId) => {
+    checkOptions();
+    unofficial.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    unofficial.getProjectAccountConfig(projectId);
+  });
  
 program.parse();
 

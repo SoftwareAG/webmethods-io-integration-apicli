@@ -6,10 +6,59 @@
 
 const request = require('request');
 const fs = require ('fs');
-const dbg = require('./debug.js');
+const cj = request.jar();
+cookieJar = [];
 
 function debug(message){
     dbg.message("<REST> " + message);
+}
+
+function addCookieToJar(cookie,domainName)
+{
+    debug(".<COOKIES> adding cookie:" + cookie);
+    cookieJar.push(cookie);
+    cj.setCookie(cookie,domainName);
+}
+
+function displayCookies()
+{
+    for(var i=0;i<cookieJar.length;i++)
+    {
+        var cookieVal = cookieJar[i].split(";")[0];
+        debug("COOKIE[" + i + "] :" + cookieVal);
+    }
+}
+
+function enableProxy(options){
+    if(proxy)
+    {
+        debug("Enabling Proxy");
+        options.proxy = proxy;
+    }
+}
+
+function enableCACert(options){
+    if(proxy)
+    {
+        debug("Enabling CACert");
+        options.agentOptions={};
+        options.agentOptions.ca = fs.readFileSync(caCertFile)
+    }
+}
+
+function ignoreTLS(options)
+{
+    if(ignoreTLS)
+    {
+        debug("\x1b[31m***** WARNING: Ignoring TLS Errors has been enabled *****\x1b[0m");
+        process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+    }
+}
+
+function requestModifiers(options){
+    enableProxy(options);
+    enableCACert(options);
+    ignoreTLS(options);
 }
 
 function get(restEndPoint,user,pass,timeout,callback)
@@ -29,6 +78,7 @@ function get(restEndPoint,user,pass,timeout,callback)
             password: pass
         }
     };
+    requestModifiers(options);
     debug(JSON.stringify(options));
     request(options, (err, res, body) => {
         if(body)debug("BODY:" + JSON.stringify(body));
@@ -82,6 +132,7 @@ function sendBody(restEndPoint,user,pass,timeout,data,type,callback){
         },
         body: data
     };
+    requestModifiers(options);
     debug(JSON.stringify(options));
 
     request(options, (err, res, body) => {
@@ -126,6 +177,7 @@ function postUploadFile(restEndPoint,user,pass,timeout,data,filename,callback){
         },
         body: data
     };
+    requestModifiers(options);
     debug(JSON.stringify(options));
 
     request(options, (err, res, body) => {
@@ -167,6 +219,7 @@ function postDownloadFile(restEndPoint,user,pass,timeout,data,filename,callback)
         },
         body: data
     };
+    requestModifiers(options);
     debug(JSON.stringify(options));
 
     request(options, (err, res, body) => {
@@ -243,6 +296,7 @@ function del(restEndPoint,user,pass,timeout,data,callback){
             password: pass
         }
     };
+    requestModifiers(options);
     debug(JSON.stringify(options));
     request(options, (err, res, body) => {
         if(body)debug("BODY:" + JSON.stringify(body));
@@ -266,4 +320,101 @@ function del(restEndPoint,user,pass,timeout,data,callback){
     });
 }
 
-module.exports = { get, post, put, del, postDownloadFile, postUploadFile, downloadFile, httpDelete };
+function custom(restEndPoint,user,pass,timeout,jsonBody,formBody,type,callback,cookies,headers,jsonFlag,redirect){
+    var options = {
+        url: restEndPoint,
+        method: type,
+        followRedirect: false,
+        followAllRedirects: false,
+        followOriginalHttpMethod: false,
+        timeout: timeout*1000,
+        headers: {
+        },
+        jar:cj 
+    };
+    requestModifiers(options);
+
+    //Redirects
+    if(redirect && redirect==true){
+        options.followAllRedirects=true;
+        options.followRedirect=true;
+        options.followOriginalHttpMethod = true;
+    }
+
+    //Use JSON Based data/responses
+    if(jsonFlag===undefined) options.json = true; 
+    else options.json = jsonFlag;
+    
+    //Authentication
+    if(user!==undefined)
+    {
+        options.auth={};
+        options.auth.username = user;
+        options.auth.password = pass;
+    }
+
+    //Body Content
+    if(jsonBody!==undefined)options.body=jsonBody;
+    if(formBody!==undefined)
+    {
+        debug("Processing Form");
+        options.form={};
+        for(var i=0;i<formBody.length;i++)
+        {
+            debug(" - FormData Item " + i + "[" + formBody[i].name + "] value [" + formBody[i].value + "]");
+            options.form[formBody[i].name]=formBody[i].value;
+        }
+    }
+
+    //Headers
+    if(headers!==undefined){
+        debug("Processing Headers");
+        //enumerate through headers nvp and add them
+        for(var i=0;i<headers.length;i++)
+        {
+            debug(" - Header [" + headers[i].name + "] Val[" + headers[i].value + "]");
+            options.headers[headers[i].name]=headers[i].value;
+        }
+    }
+
+    //Default Content Type if not set
+    if(options.headers['content-type']===undefined )
+    {
+        options.headers['content-type']='application/json';
+    }
+
+    //Defauly accept if not se
+    if(options.headers['Accept']===undefined )
+    {
+        options.headers['Accept']='application/json';
+
+    }
+
+    //Cookies
+    if(cookies!==undefined)
+    {
+
+        debug("Processing Cookies");
+        var cookieStr = "";
+        for(var i=0;i<cookies.length;i++)
+        {
+            debug(" - Adding: " +cookies[i]);
+            var cookie = request.cookie(JSON.stringify(cookies[i]));
+            //if(i!=cookies.length-1)cookieStr+="; ";
+            cj.setCookie(cookie,domainName);
+        }
+        options.jar = cj;
+    }
+
+    request(options, (err, res, body) => {
+
+        //if(body)console.log("BODY:" + JSON.stringify(body));
+        
+        if(err)console.log(err);
+        //if(res)console.log("RES:" + JSON.stringify(res));
+        
+        return callback(restEndPoint,err,body,res);
+    });
+}
+
+module.exports = { get, post, put, del, postDownloadFile, postUploadFile, downloadFile, httpDelete, custom, addCookieToJar, displayCookies };

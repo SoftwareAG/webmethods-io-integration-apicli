@@ -6,7 +6,6 @@
  */
 
 const request = require('./rest.js');
-const dbg = require('./debug.js');
 
 var domainName, username,password,timeout;
 var prettyprint;
