@@ -572,7 +572,24 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
     experimental.getProjectAccountConfig(projectId);
   });
- 
+
+  program.command('experimental-project-search <project-name>')
+  .description('Search project info by name')
+  .action((projectName) => {
+    checkOptions();
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.searchProject(projectName);
+  });
+
+  program.command('experimental-project-deployments <project-id>')
+  .description('List all project deployments')
+  .action((projectId) => {
+    checkOptions();
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.projectDeployments(projectId);
+  });
+  
+  
 program.parse();
 
 

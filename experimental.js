@@ -12,6 +12,7 @@
 const request = require('request');
 const rest = require('./rest.js');
 const fs = require('fs');
+const { findSourceMap } = require('module');
 
 
 var domainName, username,password,timeout;
@@ -22,6 +23,7 @@ var authtoken="";
 var uid="";
 var csrf="";
 var projectId;
+var projectName ;
 var nextUrl,formUrl;
 var finalCall;
 var loginStageCounter = 0;
@@ -84,6 +86,50 @@ function getProjectAccountConfig(inProjectId)
     loginPhase1();
 }
 
+function projectDeployments(inProjectId)
+{
+    debug("Listing project deployments for projectId [" + inProjectId + "]");
+    projectId = inProjectId;
+    finalCall = getProjectDeployments;
+    loginPhase1();
+}
+
+function searchProject(inProjectName)
+{
+    projectName = inProjectName;
+    finalCall = searchProjectsByName;
+    loginPhase1();
+}
+
+
+function searchProjectsByName()
+{
+    debug("Search Projects By Name [" + projectName + "]");
+    var endPoint = "https://" + domainName + "/enterprise/v1/projects?limit=25&skip=0&q=" + projectName;
+    debug("Next URL [" + endPoint + "]");
+
+    var headers = [
+        {name:"authtoken",value:authtoken},
+        {name:"accept",value:"application/json"},
+        {name:"x-csrf-token",value:csrf},
+    ];
+    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
+}
+
+function getProjectDeployments()
+{
+    debug("Executing Project Deployments call");
+    var endPoint = "https://" + domainName + "/enterprise/v1/deployments";
+    debug("Next URL [" + endPoint + "]");
+
+    var headers = [
+        {name:"authtoken",value:authtoken},
+        {name:"accept",value:"application/json"},
+        {name:"project_uid",value:projectId},
+        {name:"x-csrf-token",value:csrf},
+    ];
+    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
+}
 
 function stageInfo()
 {
@@ -101,7 +147,7 @@ function stageInfo()
 
 function getProjectAccountConfigInfo()
 {
-    debug("PRojet Account Config Info");
+    debug("Project Account Config Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/configdata";
     debug("Next URL [" + endPoint + "]");
 
@@ -245,7 +291,7 @@ function checkResponse(res,body)
     }
 
     if(res.statusCode == 200){
-        //debug(body);
+        debug(body);
     }
 
     if(res.statusCode == 400 || res.statusCode == 404 || res.statusCode == 500 || res.statusCode == 502 || res.statusCode == 403 || res.statusCode == 401)
@@ -254,8 +300,39 @@ function checkResponse(res,body)
         console.log(res);   
         process.exit(99);
     }
-
 }
+
+function checkPhase3Response(res,body)
+{
+    debug("Response Status Code =" + res.statusCode);
+    if(res.statusCode == 302){
+        nextUrl = res.headers.location;
+        debug("Redirect URL [" + nextUrl + "]");
+    }
+
+    if(res.statusCode == 200){
+        //debug(body);
+        //find <span class="kc-feedback-text"> .... </span>
+        //extract the error and return error message
+        err = body.split('<span class="kc-feedback-text">')[1];
+        err = err.split('</span>')[0];
+
+        error ={}
+        error.message = err;
+        debug("Failed to login via Software AG Cloud [" + err + "] - exiting")
+        console.log(JSON.stringify(error));
+        
+        process.exit(401);
+    }
+
+    if(res.statusCode == 400 || res.statusCode == 404 || res.statusCode == 500 || res.statusCode == 502 || res.statusCode == 403 || res.statusCode == 401)
+    {
+        debug("Failed to login via Software AG Cloud - exiting")
+        console.log(res);   
+        process.exit(99);
+    }
+}
+
 
 function processProjectsResponse(url,err,body,res){
     //console.log(body);
@@ -370,7 +447,7 @@ function loginResponse(url,err,body,res){
             break;
 
         case 3:
-            checkResponse(res,body);
+            checkPhase3Response(res,body);
             nextCall = loginRedirectPhase(4);
             break;
 
@@ -398,10 +475,13 @@ function loginResponse(url,err,body,res){
 
 
     //Invoke next call in chain
-    if(nextCall!==undefined)nextCall();
-
+    if(nextCall!==undefined)
+    {
+        debug("Found target call... initiating");
+        nextCall();
+    }
     
 }
 
 
-module.exports = {init,user,stages,projectWorkflows,projectFlowservices,connectorAccounts,getProjectAccountConfig};
+module.exports = {init,user,stages,projectWorkflows,projectFlowservices,connectorAccounts,getProjectAccountConfig,searchProject,projectDeployments};
