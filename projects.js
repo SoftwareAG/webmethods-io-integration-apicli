@@ -41,7 +41,14 @@ $ node wmiocli.js
     -d tenant.int-aws-us.webmethods.io 
     -u user 
     -p password 
-    project-assets Default      
+    project-assets Default
+
+\x1b[32mView Project assets (All Details) from project with given name:\x1b[0m
+    $ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-assets-detailed Default    
 
 \x1b[32mUpdate Project name:\x1b[0m
 $ node wmiocli.js 
@@ -106,7 +113,7 @@ $ node wmiocli.js
     -p password 
     project-param-update projectName param-uid param-name param-value required isPassword
 
-\x1b[32mDelete Project Workflow Parameter\x1b[0m
+\x1b[32mDelete Project Workflow Parameter matching the provided parameter id\x1b[0m
 $ node wmiocli.js 
     -d tenant.int-aws-us.webmethods.io 
     -u user 
@@ -202,6 +209,12 @@ function del(projectId) {
 function listAssets(projectId) {
     debug("List Assets [" + projectId + "]");
     if (projectId) url += "/" + projectId + "/assets";
+    request.get(url, username, password, timeout, processResponse);
+}
+
+function listAssetsDetailed(projectId) {
+    debug("List Assets [" + projectId + "]");
+    if (projectId) url += "/" + projectId + "/assets?complete=true" ;
     request.get(url, username, password, timeout, processResponse);
 }
 
@@ -304,7 +317,7 @@ function deploy(projectName, version) {
 
 module.exports = {
     help, init, list, create, update, del,
-    listAssets, pub, deploy,
+    listAssets, listAssetsDetailed, pub, deploy,
     createParam, updateParam, listParam, deleteParam,
     listWebhooks, regenWebhook, setWebhookAuth
 };

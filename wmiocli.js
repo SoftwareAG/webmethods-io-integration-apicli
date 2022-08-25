@@ -175,6 +175,15 @@ program.command('project-assets <project-name>')
   if(resp)console.log(resp);
 });  
 
+program.command('project-assets-detailed <project-name>')
+.description('Lists project assets (All Details) from given project name or uid')
+.action((projectName) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  var resp = project.listAssetsDetailed(projectName);
+  if(resp)console.log(resp);
+});  
+
 program.command('project-create <project-name>')
 .description('Create project with given name')
 .action((projectName) => {
