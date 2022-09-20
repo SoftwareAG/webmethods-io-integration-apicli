@@ -13,6 +13,7 @@ const request = require('request');
 const rest = require('./rest.js');
 const fs = require('fs');
 const { findSourceMap } = require('module');
+const { brotliDecompress, brotliCompressSync } = require('zlib');
 
 
 var domainName, username,password,timeout;
@@ -23,11 +24,22 @@ var authtoken="";
 var uid="";
 var csrf="";
 var projectId;
+var workflowId;
 var projectName ;
+var executionStatus;
+var startDate;
+var endDate;
+var startOrResume;
 var nextUrl,formUrl;
 var finalCall;
 var loginStageCounter = 0;
+const maxRunningWorkflows = 20;
 
+
+function info(message){
+    message = "<EXPERIMENTAL> INFO: \x1b[32m" + message + "\x1b[0m"
+    console.log(message);
+}
 function debug(message){
     dbg.message("<EXPERIMENTAL> " + message);
 }
@@ -99,6 +111,281 @@ function searchProject(inProjectName)
     projectName = inProjectName;
     finalCall = searchProjectsByName;
     loginPhase1();
+}
+
+function getMonitorInfo(inExecutionStatus,inStartDate,inEndDate,inProjectId,inWorkflowId,)
+{
+    projectId = inProjectId;
+    workflowId = inWorkflowId;
+    executionStatus = inExecutionStatus;
+    startDate = inStartDate;
+    endDate = inEndDate;
+    finalCall = getLogs;
+    loginPhase1();
+}
+
+function workflowResubmit(instartOrResume, inStartDate,inEndDate, inProjectId,inWorkflowId,)
+{
+    projectId = inProjectId;
+    workflowId = inWorkflowId;
+    startDate = inStartDate;
+    endDate = inEndDate;
+    startOrResume = instartOrResume;
+    finalCall = checkResubmissions;
+    loginPhase1();
+}
+
+function debugMonitorInfo()
+{
+    debug("Monitor Project:         [" + projectName + "]");
+    debug("Monitor workflowId:      [" + workflowId + "]");
+    debug("Monitor executionStatus: [" + executionStatus + "]");
+    debug("Monitor startDate:       [" + startDate + "]");
+    debug("Monitor endDate:         [" + endDate + "]");
+}
+
+function processMonitorBody()
+{
+    var body={};
+    
+    if(endDate)body.end_date = endDate;
+    if(startDate)body.start_date = startDate;
+    else
+    {
+        startDate = new Date();
+        startDate.setHours(0);
+        startDate.setMinutes(0);
+        startDate.setSeconds(0);
+        startDate.setMilliseconds(0);
+
+        if(!endDate)
+        {
+            endDate = new Date;
+            endDate.setHours(23);
+            endDate.setMinutes(59);
+            endDate.setSeconds(59);
+            endDate.setMilliseconds(999);
+        }
+        body.start_date=startDate;
+        body.end_date=endDate;
+    }
+
+    if(projectId)body.projects=[projectId]
+    if(workflowId)body.workflows = [workflowId];
+    if(executionStatus)body.execution_status = [executionStatus];
+    body.skip=0;
+    body.limit=20;
+    return body;
+}
+
+function setHeaders()
+{
+    var headers = [
+        {name:"authtoken",value:authtoken},
+        {name:"accept",value:"application/json"},
+        {name:"x-csrf-token",value:csrf},
+    ];
+    return headers;
+}
+
+function checkResubmissions()
+{
+    debug("Check Resubmissions")
+    debugMonitorInfo();
+    //Check running
+    var endPoint = "https://" + domainName + "/enterprise/v1/metrics/workflowexecutions/logs";
+    debug("Next URL [" + endPoint + "]");
+    var body=processMonitorBody();
+    body.execution_status=["running"];
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,60,body,undefined,"POST",processRunningResponse,undefined,headers,true,false);  
+}
+
+function processResubmissions(reprocessCount)
+{
+    debug("Process Resubmissions")
+    debugMonitorInfo();
+    //Check running
+    var endPoint = "https://" + domainName + "/enterprise/v1/metrics/workflowexecutions/logs";
+    debug("Next URL [" + endPoint + "]");
+    var body=processMonitorBody();
+    body.limit=reprocessCount;
+    body.execution_status=["failed"];
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,60,body,undefined,"POST",processListResponse,undefined,headers,true,false);  
+}
+
+function processSingleResubmission(a,b, vbid)
+{
+    info("Processing Resubmission [" + a + " of " + b + "] Action [" + startOrResume + "] VBID [" + vbid + "]");
+    var endPoint = "https://cpointegrationdev.int-aws-de.webmethods.io/enterprise/v1/tenant/account/billlogs/" + vbid;
+    debug("Next URL [" + endPoint + "]");
+    //var body=processMonitorBody();
+    //body.limit=reprocessCount;
+    //body.execution_status=["failed"];
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processSingleResubmissionResponse,undefined,headers,true,false);  
+}
+
+function finishProcessSingleResubmission(vbid,wfuid,payloaduid,projectuid,flowname,stoptime)
+{
+    info("Actioning Resubmission Action [" + startOrResume + "] VBID [" + vbid + "]");
+    var endPoint = "https://" + domainName + "/enterprise/v1/execute/" + wfuid + "/resume"
+    debug("Next URL [" + endPoint + "]");
+    //var body=processMonitorBody();
+    //body.limit=reprocessCount;
+    //body.execution_status=["failed"];
+    var headers = [
+        {name:"authtoken",value:authtoken},
+        {name:"accept",value:"application/json"},
+        {name:"x-csrf-token",value:csrf},
+        {name:"project_uid",value:projectuid},
+    ];
+    var body = {"bill_uid":vbid,"__is_checkpoint_run__":true,"payload_uid":payloaduid,"checkpointLogs":[]};
+    rest.custom(endPoint,undefined,undefined,60,body,undefined,"POST",processFinalSingleResubmissionResponse,undefined,headers,true,false);  
+}
+
+function processFinalSingleResubmissionResponse(url,err,body,res){
+    if(res.statusCode==200)
+    {
+        info("Processed");
+    }
+    else
+    {
+        info("Failed to Resubmit entry")
+        console.log(body);
+        process.exit(99);
+    }
+}
+
+function processSingleResubmissionResponse(url,err,body,res){
+    if(res.statusCode==200)
+    {
+        if(body.output.uid)
+        {
+            info("Found Monitor Entry");
+            info("VBID         [" + body.output.uid + "]");
+            info("Flow UID     [" + body.output.flow_uid + "]");
+            info("Payload UID  [" + body.output.payload_uid + "]");
+            info("Project_UID  [" + body.output.project_uid + "]");
+            info("Flow Name    [" + body.output.flow_name + "]");
+            info("Stop time    [" + body.output.stop_time + "]");
+            finishProcessSingleResubmission(body.output.uid,body.output.flow_uid,body.output.payload_uid,body.output.project_uid,body.output.flow_name,body.output.stop_time); 
+        }
+        else{
+
+            info("Not able to find monitor entry");
+        }
+    }
+    else
+    {
+        info("Failed to get Monitor entry")
+        console.log(body);
+        process.exit(99);
+    }
+}
+
+function processRunningResponse(url,err,body,res){
+    //console.log(body);
+    if(res.statusCode==200)
+    {
+        //... do something next      
+        if(body.output.count==0)
+        {
+            info("No Workflows Running")
+            info("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
+        }
+        else{
+            info("Workflows Running [" +body.output.count + "]")
+            if(body.output.count<maxRunningWorkflows)
+            {
+                info("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
+            }
+            else
+            {
+                info("Maximum Workflows Currently in progress");
+                process.exit(0);
+            }
+        }
+        processResubmissions(maxRunningWorkflows - body.output.count);
+    }
+    else
+    {
+        info("Failed to get Running Workflows")
+        console.log(err);
+        process.exit(99);
+    }
+}
+
+function processListResponse(url,err,body,res){
+    //console.log(body);
+    if(res.statusCode==200)
+    {
+        resubmitExecutions = maxRunningWorkflows;
+        //... do something next      
+        if(body.output.count==0)
+        {
+            info("No Workflows To Resubmit");
+            process.exit(0);
+        }
+        else{
+
+            info("Workflows To Resubmit [" + body.output.logs.length + " of " + body.output.count + "]");
+            for(var i=0;i<body.output.logs.length;i++)
+            {
+                processSingleResubmission(i,body.output.logs.length,body.output.logs[i].uid);
+            }
+           
+        }
+    }
+    else
+    {
+        info("Failed to get Running Workflows")
+        console.log(err);
+        process.exit(99);
+    }
+}
+
+function processRunningResponse(url,err,body,res){
+    //console.log(body);
+    if(res.statusCode==200)
+    {
+        //... do something next      
+        if(body.output.count==0)
+        {
+            console.log("No Workflows Running")
+            debug("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
+        }
+        else{
+            debug("Workflows Running [" +body.output.count + "]")
+            if(body.output.count<maxRunningWorkflows)
+            {
+                debug("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
+            }
+            else
+            {
+                debug("Maximum Workflows Currently in progress");
+                process.exit(0);
+            }
+        }
+        processResubmissions(maxRunningWorkflows - body.output.count);
+    }
+    else
+    {
+        debug("Failed to get Running Workflows")
+        console.log(err);
+        process.exit(99);
+    }
+}
+
+function getLogs()
+{
+    debugMonitorInfo();
+    var endPoint = "https://" + domainName + "/enterprise/v1/metrics/workflowexecutions/logs";
+    debug("Next URL [" + endPoint + "]");
+    var body=processMonitorBody();
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,60,body,undefined,"POST",processResponse,undefined,headers,true,false);  
 }
 
 
@@ -484,4 +771,4 @@ function loginResponse(url,err,body,res){
 }
 
 
-module.exports = {init,user,stages,projectWorkflows,projectFlowservices,connectorAccounts,getProjectAccountConfig,searchProject,projectDeployments};
+module.exports = {init,user,stages,projectWorkflows,projectFlowservices,connectorAccounts,getProjectAccountConfig,searchProject,getMonitorInfo,workflowResubmit,projectDeployments};

@@ -354,7 +354,14 @@ function custom(restEndPoint,user,pass,timeout,jsonBody,formBody,type,callback,c
     }
 
     //Body Content
-    if(jsonBody!==undefined)options.body=jsonBody;
+    if(jsonBody!==undefined)
+    {
+        debug("Processing JSON Body");
+        debug("Body is [" + JSON.stringify(jsonBody) + "]");
+        options.body=jsonBody;
+        
+    }
+
     if(formBody!==undefined)
     {
         debug("Processing Form");

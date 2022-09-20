@@ -226,7 +226,7 @@ program.command('project-deploy <projectName> <version>')
 });
 
 program.command('project-param <project-name> [param-uid]')
-.description('Lists all project parameters from given project name, or specific parameter with given paramater uid')
+.description('Lists all project parameters from given project name, or specific parameter with given parameter uid')
 .action((projectName,paramName) => {
   checkOptions();
   project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
@@ -292,6 +292,22 @@ program.command('project-webhooks-auth <project-id> <workflow-uid> <auth-type>')
   checkOptions();
   project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
   project.setWebhookAuth(projectId,workflowUid,authType);
+});
+
+program.command('project-triggers-list <project-id>')
+.description('Provide a list of triggers within a project')
+.action((projectId) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  project.listTriggers(projectId);
+});
+
+program.command('project-triggers-delete <project-id> <trigger-id>')
+.description('Delete a trigger within a project with the given IDs')
+.action((projectId,triggerId) => {
+  checkOptions();
+  project.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+  project.deleteTrigger(projectId,triggerId);
 });
 
 
@@ -362,7 +378,7 @@ program.command('user-role-assignment <user-id> <role-names>')
 
 /**
  * ------------------------------------------------------------------------------------------------------------------------------------
- * WORKFLOW IMPORT/EXPORT/DELETE/EXECUTE/STATUS
+ * WORKFLOW IMPORT/EXPORT/DELETE/EXECUTE/STATUS/CREATE
  * ------------------------------------------------------------------------------------------------------------------------------------
  */
 program.command('workflow-export <project-id> <workflow-id> <filename>')
@@ -405,6 +421,14 @@ program.command('workflow-status <project-id> <run-id>')
   checkOptions();
   wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
   wf.statuswf(runId);
+});
+
+program.command('workflow-create <project-id> <worfklow-name> <workflow-description>')
+.description('Creates a blank workflow with the given name/description')
+.action((projectId, workflowName,workflowDescription) => {
+  checkOptions();
+  wf.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,projectId);
+  wf.createwf(workflowName,workflowDescription);
 });
 
 /**
@@ -534,7 +558,8 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
  * experimental non-public APIs
  * ------------------------------------------------------------------------------------------------------------------------------------
  */
-  program.command('experimental-user')
+  program.command('experimental-user',{hidden: true})
+   .addHelpCommand("HELP")
    .description('Get User information')
    .action(() => {
       checkOptions();
@@ -542,7 +567,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
       experimental.user();
   });
 
-  program.command('experimental-stages')
+  program.command('experimental-stages',{hidden: true})
   .description('Get Stage information')
   .action(() => {
      checkOptions();
@@ -550,7 +575,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
      experimental.stages();
   });
 
-  program.command('experimental-project-workflows <project-id>')
+  program.command('experimental-project-workflows <project-id>',{hidden: true})
   .description('Get information about project workflows')
   .action((projectId) => {
       checkOptions();
@@ -558,7 +583,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
       experimental.projectWorkflows(projectId);
   });
 
-  program.command('experimental-project-flowservices <project-id>')
+  program.command('experimental-project-flowservices <project-id>',{hidden: true})
   .description('Get information about project FlowServices')
   .action((projectId) => {
     checkOptions();
@@ -566,7 +591,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.projectFlowservices(projectId);
   });
 
-  program.command('experimental-project-connector-accounts <project-id>')
+  program.command('experimental-project-connector-accounts <project-id>',{hidden: true})
   .description('Get Information about project connector accounts')
   .action((projectId) => {
     checkOptions();
@@ -574,7 +599,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.connectorAccounts(projectId);
   });
 
-  program.command('experimental-project-connector-account-wf-config <project-id>')
+  program.command('experimental-project-connector-account-wf-config <project-id>',{hidden: true})
   .description('Get configuration information about project connector accounts')
   .action((projectId) => {
     checkOptions();
@@ -582,7 +607,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.getProjectAccountConfig(projectId);
   });
 
-  program.command('experimental-project-search <project-name>')
+  program.command('experimental-project-search <project-name>',{hidden: true})
   .description('Search project info by name')
   .action((projectName) => {
     checkOptions();
@@ -590,13 +615,30 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.searchProject(projectName);
   });
 
-  program.command('experimental-project-deployments <project-id>')
+  program.command('experimental-project-deployments <project-id>',{hidden: true})
   .description('List all project deployments')
   .action((projectId) => {
     checkOptions();
     experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
     experimental.projectDeployments(projectId);
   });
+
+  program.command('experimental-workflow-monitor [start-date] [end-date] [project-id] [workflow-id] [execution-status]',{hidden: true})
+  .description('List Workflow Monitor')
+  .action((executionStatus,startDate,endDate,projectId,workflowId) => {
+    checkOptions();
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.getMonitorInfo(executionStatus,startDate,endDate,projectId,workflowId);
+  });
+
+  program.command('experimental-workflow-resubmit [restart-or-resume] [start-date] [end-date] [project-id] [workflow-id]',{hidden: true})
+  .description('Resubmit workflows from monitor')
+  .action((restartOrResume,startDate,endDate,projectId,workflowId) => {
+    checkOptions();
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.workflowResubmit(restartOrResume, startDate, endDate, projectId,workflowId);
+  });
+  
   
   
 program.parse();

@@ -144,6 +144,19 @@ $ node wmiocli.js
     e.g.
     node wmiocli.js -d env -u user -p pass project-webhooks-auth flf1111 flf2222 login
 
+\x1b[32mList triggers in project\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-triggers-list project-uid
+    
+\x1b[32mDelete trigger in project\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-triggers-delete project-uid trigger-uid
 `;
 }
 function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyprint) {
@@ -315,9 +328,26 @@ function deploy(projectName, version) {
     request.post(url, username, password, timeout, data, processResponse);
 }
 
+function listTriggers(projectId) {
+    debug("List Triggers for ProjectId [" + projectId + "]");
+    if (projectId) url += "/" + projectId + "/trigger-flows";
+    request.get(url, username, password, timeout, processResponse);
+}
+
+function deleteTrigger(projectId,triggerId) {
+    debug("Deete Triggers for ProjectId [" + projectId + "] with triggerID [" + triggerId + "]");
+    if (projectId) url += "/" + projectId + "/trigger-flows";
+    if(triggerId) url += "/" + triggerId;
+    var data;
+    request.httpDelete(url, username, password, timeout, data, processResponse);
+}
+
+
+
 module.exports = {
     help, init, list, create, update, del,
     listAssets, listAssetsDetailed, pub, deploy,
     createParam, updateParam, listParam, deleteParam,
-    listWebhooks, regenWebhook, setWebhookAuth
+    listWebhooks, regenWebhook, setWebhookAuth,
+    listTriggers, deleteTrigger
 };

@@ -32,6 +32,13 @@ $ node wmiocli.js
     -p password 
     workflow-import fl65d3aa87fc1783ea5cf8c8 export.zip
 
+\x1b[32mCreate a blank workflow\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    workflow-create fl65d3aa87fc1783ea5cf8c8 "name" "description"
+
 \x1b[32mDelete Workflow from a given project\x1b[0m
 $ node wmiocli.js 
     -d tenant.int-aws-us.webmethods.io 
@@ -52,7 +59,7 @@ $ node wmiocli.js
     -u user
     -p password 
     workflow-status fl65d3aa87fc1783ea5cf8c8 vbid3d247cd26aa5e19354e1fc6951766a3d19c049bee11d 
-
+        
 `;
 }
 
@@ -145,4 +152,10 @@ function deletewf(workflowId) {
     rest.del(url, username, password, timeout, {}, processResponse);
 }
 
-module.exports = { help, init, exportwf, importwf, runwf, statuswf, deletewf };
+function createwf(workflowName,workflowDesc) {
+    debug("Creating Workflow with Name [" + workflowName + "]");
+    url += "/workflows/";
+    rest.post(url, username, password, timeout, {"name":workflowName,"description":workflowDesc}, processResponse);
+}
+
+module.exports = { help, init, exportwf, importwf, runwf, statuswf, deletewf, createwf };
