@@ -6,7 +6,6 @@
  */
 
 const request = require('./rest.js');
-const dbg = require('./debug.js');
 
 var domainName, username,password,timeout;
 var prettyprint;
@@ -20,7 +19,7 @@ function checkForErrors(inBody)
 }
 
 function debug(message){
-    dbg.message("<USERS> " + message);
+    dbg.message("<USERS> " + message,4);
 }
 
 
