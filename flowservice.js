@@ -12,7 +12,7 @@ var domainName, username,password,timeout,prettyprint;
 var url;
 
 function debug(message){
-    dbg.message("<FLOWSERVICE> " + message);
+    dbg.message("<FLOWSERVICE> " + message,4);
 }
 
 function help(){

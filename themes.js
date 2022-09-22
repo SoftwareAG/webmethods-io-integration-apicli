@@ -11,7 +11,7 @@ var prettyprint = false;
 var url;
 
 function debug(message) {
-    dbg.message("<THEMES> " + message);
+    dbg.message("<THEMES> " + message,4);
 }
 
 function help() {

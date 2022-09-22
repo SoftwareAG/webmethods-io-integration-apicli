@@ -12,7 +12,7 @@ var prettyprint = false;
 var url;
 
 function debug(message) {
-    dbg.message("<PROJECTS> " + message);
+    dbg.message("<PROJECTS> " + message,4);
 }
 
 function help() {

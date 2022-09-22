@@ -10,7 +10,7 @@ const cj = request.jar();
 cookieJar = [];
 
 function debug(message){
-    dbg.message("<REST> " + message);
+    dbg.message("<REST>:" + message,4);
 }
 
 function addCookieToJar(cookie,domainName)
@@ -46,11 +46,11 @@ function enableCACert(options){
     }
 }
 
-function ignoreTLS(options)
+function setignoreTLS(options)
 {
     if(ignoreTLS)
     {
-        debug("\x1b[31m***** WARNING: Ignoring TLS Errors has been enabled *****\x1b[0m");
+        debug("\x1b[31m***** WARNING: Ignoring TLS Errors has been enabled *****\x1b[0m",2);
         process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
     }
 }
@@ -58,7 +58,7 @@ function ignoreTLS(options)
 function requestModifiers(options){
     enableProxy(options);
     enableCACert(options);
-    ignoreTLS(options);
+    setignoreTLS(options);
 }
 
 function get(restEndPoint,user,pass,timeout,callback)

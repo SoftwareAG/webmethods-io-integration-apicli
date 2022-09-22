@@ -9,11 +9,9 @@
 //  therefore unsupported - use these at your own risk!
 // ------------------------------------------------------------------------------
 
-const request = require('request');
-const rest = require('./rest.js');
-const fs = require('fs');
-const { findSourceMap } = require('module');
-const { brotliDecompress, brotliCompressSync } = require('zlib');
+const request = require("request");
+const rest = require("./rest.js");
+
 
 
 var domainName, username,password,timeout;
@@ -36,26 +34,22 @@ var loginStageCounter = 0;
 const maxRunningWorkflows = 20;
 
 
-function info(message){
-    message = "<EXPERIMENTAL> INFO: \x1b[32m" + message + "\x1b[0m"
-    console.log(message);
-}
 function debug(message){
-    dbg.message("<EXPERIMENTAL> " + message);
+    dbg.message("<EXPERIMENTAL> " + message,4);
 }
 
 function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     
-    dbg.message("EXPERIMENTAL/UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK");
+    dbg.message("EXPERIMENTAL/UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK",4);
     domainName = inDomainName;
     username = inUsername;
     password = inPassword;
     timeout = inTimeout;
     prettyprint = inPrettyprint;
     url = "https://" + domainName;
-    dbg.message("Username [" + username + "]");
-    dbg.message("URL      [" + url + "]");
-    dbg.message("Timeout  [" + timeout + "]");
+    dbg.message("Username [" + username + "]",4);
+    dbg.message("URL      [" + url + "]",4);
+    dbg.message("Timeout  [" + timeout + "]",4);
 }
 
 function user()
@@ -100,7 +94,7 @@ function getProjectAccountConfig(inProjectId)
 
 function projectDeployments(inProjectId)
 {
-    debug("Listing project deployments for projectId [" + inProjectId + "]");
+    dbg.message("Listing project deployments for projectId [" + inProjectId + "]",4);
     projectId = inProjectId;
     finalCall = getProjectDeployments;
     loginPhase1();
@@ -113,7 +107,7 @@ function searchProject(inProjectName)
     loginPhase1();
 }
 
-function getMonitorInfo(inExecutionStatus,inStartDate,inEndDate,inProjectId,inWorkflowId,)
+function getMonitorInfo(inExecutionStatus,inStartDate,inEndDate,inProjectId,inWorkflowId)
 {
     projectId = inProjectId;
     workflowId = inWorkflowId;
@@ -124,7 +118,7 @@ function getMonitorInfo(inExecutionStatus,inStartDate,inEndDate,inProjectId,inWo
     loginPhase1();
 }
 
-function workflowResubmit(instartOrResume, inStartDate,inEndDate, inProjectId,inWorkflowId,)
+function workflowResubmit(instartOrResume, inStartDate,inEndDate, inProjectId,inWorkflowId)
 {
     projectId = inProjectId;
     workflowId = inWorkflowId;
@@ -217,7 +211,7 @@ function processResubmissions(reprocessCount)
 
 function processSingleResubmission(a,b, vbid)
 {
-    info("Processing Resubmission [" + a + " of " + b + "] Action [" + startOrResume + "] VBID [" + vbid + "]");
+    dbg.message("Processing Resubmission [" + a + " of " + b + "] Action [" + startOrResume + "] VBID [" + vbid + "]",);
     var endPoint = "https://cpointegrationdev.int-aws-de.webmethods.io/enterprise/v1/tenant/account/billlogs/" + vbid;
     debug("Next URL [" + endPoint + "]");
     //var body=processMonitorBody();
@@ -229,7 +223,7 @@ function processSingleResubmission(a,b, vbid)
 
 function finishProcessSingleResubmission(vbid,wfuid,payloaduid,projectuid,flowname,stoptime)
 {
-    info("Actioning Resubmission Action [" + startOrResume + "] VBID [" + vbid + "]");
+    dbg.message("Actioning Resubmission Action [" + startOrResume + "] VBID [" + vbid + "]",3);
     var endPoint = "https://" + domainName + "/enterprise/v1/execute/" + wfuid + "/resume"
     debug("Next URL [" + endPoint + "]");
     //var body=processMonitorBody();
@@ -248,12 +242,12 @@ function finishProcessSingleResubmission(vbid,wfuid,payloaduid,projectuid,flowna
 function processFinalSingleResubmissionResponse(url,err,body,res){
     if(res.statusCode==200)
     {
-        info("Processed");
+        dbg.message("Processed",3);
     }
     else
     {
-        info("Failed to Resubmit entry")
-        console.log(body);
+        dbg.message("Failed to Resubmit entry",1)
+        dbg.message(body,1);
         process.exit(99);
     }
 }
@@ -263,47 +257,46 @@ function processSingleResubmissionResponse(url,err,body,res){
     {
         if(body.output.uid)
         {
-            info("Found Monitor Entry");
-            info("VBID         [" + body.output.uid + "]");
-            info("Flow UID     [" + body.output.flow_uid + "]");
-            info("Payload UID  [" + body.output.payload_uid + "]");
-            info("Project_UID  [" + body.output.project_uid + "]");
-            info("Flow Name    [" + body.output.flow_name + "]");
-            info("Stop time    [" + body.output.stop_time + "]");
+            dbg.message("Found Monitor Entry",3);
+            dbg.message("VBID         [" + body.output.uid + "]",4);
+            dbg.message("Flow UID     [" + body.output.flow_uid + "]",4);
+            dbg.message("Payload UID  [" + body.output.payload_uid + "]",4);
+            dbg.message("Project_UID  [" + body.output.project_uid + "]",4);
+            dbg.message("Flow Name    [" + body.output.flow_name + "]",4);
+            dbg.message("Stop time    [" + body.output.stop_time + "]",4);
             finishProcessSingleResubmission(body.output.uid,body.output.flow_uid,body.output.payload_uid,body.output.project_uid,body.output.flow_name,body.output.stop_time); 
         }
         else{
 
-            info("Not able to find monitor entry");
+            dbg.message("Not able to find monitor entry",1);
         }
     }
     else
     {
-        info("Failed to get Monitor entry")
-        console.log(body);
+        dbg.message("Failed to get Monitor entry",1)
+        dbg.message(body,1);
         process.exit(99);
     }
 }
 
 function processRunningResponse(url,err,body,res){
-    //console.log(body);
     if(res.statusCode==200)
     {
         //... do something next      
         if(body.output.count==0)
         {
-            info("No Workflows Running")
-            info("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
+            dbg.message("No Workflows Running",4)
+            dbg.message("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",4);
         }
         else{
-            info("Workflows Running [" +body.output.count + "]")
+            dbg.message("Workflows Running [" +body.output.count + "]",2)
             if(body.output.count<maxRunningWorkflows)
             {
-                info("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
+                dbg.message("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",2);
             }
             else
             {
-                info("Maximum Workflows Currently in progress");
+                dbg.message("Maximum Workflow Executions already in progress - exiting",1);
                 process.exit(0);
             }
         }
@@ -311,26 +304,25 @@ function processRunningResponse(url,err,body,res){
     }
     else
     {
-        info("Failed to get Running Workflows")
-        console.log(err);
+        dbg.message("Failed to get Running Workflows",1);
+        dbg.message(err,1);
         process.exit(99);
     }
 }
 
 function processListResponse(url,err,body,res){
-    //console.log(body);
     if(res.statusCode==200)
     {
         resubmitExecutions = maxRunningWorkflows;
         //... do something next      
         if(body.output.count==0)
         {
-            info("No Workflows To Resubmit");
+            dbg.message("No Workflows To Resubmit",3);
             process.exit(0);
         }
         else{
 
-            info("Workflows To Resubmit [" + body.output.logs.length + " of " + body.output.count + "]");
+            dbg.message("Workflow Instances To Resubmit [" + body.output.logs.length + " of " + body.output.count + "]",3);
             for(var i=0;i<body.output.logs.length;i++)
             {
                 processSingleResubmission(i,body.output.logs.length,body.output.logs[i].uid);
@@ -340,31 +332,30 @@ function processListResponse(url,err,body,res){
     }
     else
     {
-        info("Failed to get Running Workflows")
-        console.log(err);
+        dbg.message("Failed to get Running Workflows",1)
+        dbg.message(err,1);
         process.exit(99);
     }
 }
 
 function processRunningResponse(url,err,body,res){
-    //console.log(body);
     if(res.statusCode==200)
     {
         //... do something next      
         if(body.output.count==0)
         {
-            console.log("No Workflows Running")
-            debug("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
+            dbg.message("No Workflows Running",4)
+            dbg.message("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
         }
         else{
-            debug("Workflows Running [" +body.output.count + "]")
+            dbg.message("Workflows Running [" +body.output.count + "]",3)
             if(body.output.count<maxRunningWorkflows)
             {
-                debug("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
+                dbg.message("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
             }
             else
             {
-                debug("Maximum Workflows Currently in progress");
+                dbg.message("Maximum Workflow Executions Currently in progress - exiting",1);
                 process.exit(0);
             }
         }
@@ -372,8 +363,9 @@ function processRunningResponse(url,err,body,res){
     }
     else
     {
-        debug("Failed to get Running Workflows")
-        console.log(err);
+        dbg.message("Failed to get Running Workflows",1)
+        dbg.message(err,4)
+        dbg.message(body,4)
         process.exit(99);
     }
 }
@@ -391,9 +383,9 @@ function getLogs()
 
 function searchProjectsByName()
 {
-    debug("Search Projects By Name [" + projectName + "]");
+    dbg.message("Search Projects By Name [" + projectName + "]",4);
     var endPoint = "https://" + domainName + "/enterprise/v1/projects?limit=25&skip=0&q=" + projectName;
-    debug("Next URL [" + endPoint + "]");
+    dbg.message("Next URL [" + endPoint + "]",4);
 
     var headers = [
         {name:"authtoken",value:authtoken},
@@ -405,9 +397,9 @@ function searchProjectsByName()
 
 function getProjectDeployments()
 {
-    debug("Executing Project Deployments call");
+    dbg.message("Executing Project Deployments call",4);
     var endPoint = "https://" + domainName + "/enterprise/v1/deployments";
-    debug("Next URL [" + endPoint + "]");
+    dbg.message("Next URL [" + endPoint + "]",4);
 
     var headers = [
         {name:"authtoken",value:authtoken},
@@ -583,8 +575,8 @@ function checkResponse(res,body)
 
     if(res.statusCode == 400 || res.statusCode == 404 || res.statusCode == 500 || res.statusCode == 502 || res.statusCode == 403 || res.statusCode == 401)
     {
-        debug("Failed to login via Software AG Cloud - exiting")
-        console.log(res);   
+        dbg.message("Failed to login via Software AG Cloud - exiting",4)
+        dbg.message(res,4);   
         process.exit(99);
     }
 }
@@ -606,23 +598,22 @@ function checkPhase3Response(res,body)
 
         error ={}
         error.message = err;
-        debug("Failed to login via Software AG Cloud [" + err + "] - exiting")
-        console.log(JSON.stringify(error));
+        dbg.message("Failed to login via Software AG Cloud [" + err + "] - exiting",4)
+        dbg.message(JSON.stringify(error),4);
         
         process.exit(401);
     }
 
     if(res.statusCode == 400 || res.statusCode == 404 || res.statusCode == 500 || res.statusCode == 502 || res.statusCode == 403 || res.statusCode == 401)
     {
-        debug("Failed to login via Software AG Cloud - exiting")
-        console.log(res);   
+        dbg.message("Failed to login via Software AG Cloud - exiting",4)
+        dbg.message(res,4);   
         process.exit(99);
     }
 }
 
 
 function processProjectsResponse(url,err,body,res){
-    //console.log(body);
 
     if(res.statusCode==200)
     {
@@ -645,39 +636,37 @@ function processProjectsResponse(url,err,body,res){
 
         
         if(prettyprint==true){
-            console.log(JSON.stringify(output,null,4));
+            dbg.message(JSON.stringify(output,null,4),5);
         }
         else{
-            console.log(JSON.stringify(output));
+            dbg.message((JSON.stringify(output)),5);
         }        
     }
     else
     {
-        debug("Failed to login via Software AG Cloud - exiting")
+        dbg.message("Failed to login via Software AG Cloud - exiting",4)
         process.exit(99);
     }
 }
 
 function processResponse(url,err,body,res){
-    //console.log(body);
     if(res.statusCode==200)
     {
         if(prettyprint==true){
-            console.log(JSON.stringify(body,null,4));
+            dbg.message(JSON.stringify(body,null,4),5);
         }
         else{
-            console.log(JSON.stringify(body));
+            dbg.message((JSON.stringify(body)),5);
         }        
     }
     else
     {
-        debug("Failed to login via Software AG Cloud - exiting")
+        dbg.message("Failed to login via Software AG Cloud - exiting",4)
         process.exit(99);
     }
 }
 
 function processUserResponse(url,err,body,res){
-    //console.log(body);
     if(res.statusCode==200)
     {
         csrf = body.output.csrf;        
@@ -769,6 +758,5 @@ function loginResponse(url,err,body,res){
     }
     
 }
-
 
 module.exports = {init,user,stages,projectWorkflows,projectFlowservices,connectorAccounts,getProjectAccountConfig,searchProject,getMonitorInfo,workflowResubmit,projectDeployments};

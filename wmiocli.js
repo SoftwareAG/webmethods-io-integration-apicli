@@ -14,6 +14,7 @@ var theme = require('./themes.js');
 var recipe = require('./recipe.js');
 var flowservice = require('./flowservice.js');
 var experimental = require('./experimental.js');
+const { setLogLevel } = require('./debug.js');
 
 dbg = require('./debug.js');
 prettyprint = false;
@@ -43,9 +44,6 @@ function readFromConsole(question,isPassword)
 }
 
 function checkOptions(){
-  if(program.opts().verbose==true){
-    dbg.enableDebug();
-  }
 
   if(program.opts().proxy !== undefined)
   {
@@ -66,6 +64,40 @@ function checkOptions(){
   {
     prettyprint = true;
   }
+
+  var levelInput = program.opts().loglevel
+  if(program.opts().verbose == true)
+  {
+    levelInput = "DEBUG";
+  }
+
+  if(levelInput == undefined && !program.opts().verbose){
+    levelInput = "OFF";
+  }
+  else
+  {
+    switch (levelInput)
+    {
+      case "OFF":
+        dbg.setLogLevel(0);
+        break;
+      case "ERROR":
+        dbg.setLogLevel(1);
+        break;
+      case "WARN":
+        dbg.setLogLevel(2);
+        break;
+      case "INFO":
+        dbg.setLogLevel(3);
+        break;
+      case "DEBUG":
+        dbg.setLogLevel(4);
+        break;    
+      default:
+        console.log("-level incorrectly set, should be one of: OFF, ERROR, WARN, INFO, DEBUG");
+        process.exit(1);
+    }
+  }  
 
   if(program.opts().domain == undefined){
     tenantDomain = readFromConsole('Please type your tenant domain name: ');
@@ -95,7 +127,7 @@ function checkOptions(){
 }
 
 function debug(message){
-  dbg.message("<MAIN> " + message);
+  dbg.message("<MAIN> " + message,4);
 }
 const program = new Command();
 
@@ -113,7 +145,8 @@ program
 //options
   .addOption(new Option('-t, --timeout <delay>', 'timeout in seconds').default(60, 'one minute'))
   .option('--prettyprint','Pretty Print JSON output')
-  .option('--verbose','Verbose output useful for diagnosing issues')
+  .option('--verbose','Enables full debug mode (replaced by --loglevel DEBUG)')
+  .option('--loglevel <level>','Change the logging level of DEBUG, INFO,WARN,ERROR,OFF (default being off)')
 
   .option('--proxy <proxyURL>','URL for proxy server if required')
   .option('--caCert <path-to-cert>','Path to a CACert PEM file if required')
@@ -623,7 +656,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.projectDeployments(projectId);
   });
 
-  program.command('experimental-workflow-monitor [start-date] [end-date] [project-id] [workflow-id] [execution-status]',{hidden: true})
+  program.command('experimental-workflow-monitor [execution-status] [start-date] [end-date] [project-id] [workflow-id] ',{hidden: true})
   .description('List Workflow Monitor')
   .action((executionStatus,startDate,endDate,projectId,workflowId) => {
     checkOptions();
