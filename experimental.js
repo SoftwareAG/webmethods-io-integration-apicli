@@ -28,6 +28,8 @@ var executionStatus;
 var startDate;
 var endDate;
 var startOrResume;
+var queueOrTopic;
+var messagingName;
 var nextUrl,formUrl;
 var finalCall;
 var loginStageCounter = 0;
@@ -118,6 +120,33 @@ function getMonitorInfo(inExecutionStatus,inStartDate,inEndDate,inProjectId,inWo
     loginPhase1();
 }
 
+function messagingDelete(inQueueOrTopic, inProjectId,inMessagingName)
+{
+    projectId = inProjectId;
+    messagingName = inMessagingName;
+    queueOrTopic = inQueueOrTopic;
+    finalCall = doMessagingDelete;
+    loginPhase1();    
+} 
+
+function messagingCreate(inQueueOrTopic, inProjectId,inMessagingName)
+{
+    projectId = inProjectId;
+    messagingName = inMessagingName;
+    queueOrTopic = inQueueOrTopic;
+    finalCall = doMessagingCreate;
+    loginPhase1();
+}
+
+function messagingStats(inProjectId,inMessagingName)
+{
+    projectId = inProjectId;
+    messagingName = inMessagingName;
+    finalCall = getMessagingStats;
+    loginPhase1();
+}
+
+
 function workflowResubmit(instartOrResume, inStartDate,inEndDate, inProjectId,inWorkflowId)
 {
     projectId = inProjectId;
@@ -192,7 +221,7 @@ function checkResubmissions()
     var body=processMonitorBody();
     body.execution_status=["running"];
     var headers = setHeaders();
-    rest.custom(endPoint,undefined,undefined,60,body,undefined,"POST",processRunningResponse,undefined,headers,true,false);  
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processRunningResponse,undefined,headers,true,false);  
 }
 
 function processResubmissions(reprocessCount)
@@ -206,7 +235,7 @@ function processResubmissions(reprocessCount)
     body.limit=reprocessCount;
     body.execution_status=["failed"];
     var headers = setHeaders();
-    rest.custom(endPoint,undefined,undefined,60,body,undefined,"POST",processListResponse,undefined,headers,true,false);  
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processListResponse,undefined,headers,true,false);  
 }
 
 function processSingleResubmission(a,b, vbid)
@@ -218,7 +247,7 @@ function processSingleResubmission(a,b, vbid)
     //body.limit=reprocessCount;
     //body.execution_status=["failed"];
     var headers = setHeaders();
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processSingleResubmissionResponse,undefined,headers,true,false);  
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processSingleResubmissionResponse,undefined,headers,true,false);  
 }
 
 function finishProcessSingleResubmission(vbid,wfuid,payloaduid,projectuid,flowname,stoptime)
@@ -236,7 +265,7 @@ function finishProcessSingleResubmission(vbid,wfuid,payloaduid,projectuid,flowna
         {name:"project_uid",value:projectuid},
     ];
     var body = {"bill_uid":vbid,"__is_checkpoint_run__":true,"payload_uid":payloaduid,"checkpointLogs":[]};
-    rest.custom(endPoint,undefined,undefined,60,body,undefined,"POST",processFinalSingleResubmissionResponse,undefined,headers,true,false);  
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processFinalSingleResubmissionResponse,undefined,headers,true,false);  
 }
 
 function processFinalSingleResubmissionResponse(url,err,body,res){
@@ -370,6 +399,43 @@ function processRunningResponse(url,err,body,res){
     }
 }
 
+function doMessagingCreate()
+{
+    debug("Messaging Item Creation")
+    var endPoint = "https://" +domainName + "/integration/rest/messaging/admin/destinations?projectName=" + projectId + "&type=" + queueOrTopic;
+    debug("Next URL [" + endPoint + "]");
+    var body;
+    if(queueOrTopic=="queue")body={"queueName":messagingName};
+    else if (queueOrTopic=="topic")body={"topicName":messagingName}
+    else dbg.message("Please provide either 'queue' or 'topic'",1);
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,undefined,headers,true,false);  
+}
+
+function doMessagingDelete()
+{
+    debug("Messaging Item Deletion")
+    var endPoint = "https://" +domainName + "/integration/rest/messaging/admin/destinations/" + messagingName + "?projectName=" + projectId + "&type=" + queueOrTopic;
+    debug("Next URL [" + endPoint + "]");
+    var body;
+    if(queueOrTopic=="queue")body={"queueName":messagingName};
+    else if (queueOrTopic=="topic")body={"topicName":messagingName}
+    else dbg.message("Please provide either 'queue' or 'topic'",1);
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,60,body,undefined,"DELETE",processResponse,undefined,headers,true,false);  
+    //rest.del(endPoint,undefined,undefined,timeout,undefined,processResponse);
+}
+
+function getMessagingStats()
+{
+    debug("Messaging Stats");
+    var endPoint = "https://" +domainName + "/integration/rest/messaging/runtime/destinations/"+messagingName+"/metrics?projectName=" + projectId ;
+    debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    var body;
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"GET",processResponse,undefined,headers,true,false);  
+}
+
 function getLogs()
 {
     debugMonitorInfo();
@@ -377,7 +443,7 @@ function getLogs()
     debug("Next URL [" + endPoint + "]");
     var body=processMonitorBody();
     var headers = setHeaders();
-    rest.custom(endPoint,undefined,undefined,60,body,undefined,"POST",processResponse,undefined,headers,true,false);  
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,undefined,headers,true,false);  
 }
 
 
@@ -392,7 +458,7 @@ function searchProjectsByName()
         {name:"accept",value:"application/json"},
         {name:"x-csrf-token",value:csrf},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
 }
 
 function getProjectDeployments()
@@ -407,7 +473,7 @@ function getProjectDeployments()
         {name:"project_uid",value:projectId},
         {name:"x-csrf-token",value:csrf},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
 }
 
 function stageInfo()
@@ -421,7 +487,7 @@ function stageInfo()
         {name:"accept",value:"application/json"},
         {name:"x-csrf-token",value:csrf},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
 }
 
 function getProjectAccountConfigInfo()
@@ -436,7 +502,7 @@ function getProjectAccountConfigInfo()
         {name:"project_uid",value:projectId},
         {name:"x-csrf-token",value:csrf},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
 }
 
 
@@ -452,7 +518,7 @@ function usedConnectorAccountsInfo()
         {name:"project_uid",value:projectId},
         {name:"x-csrf-token",value:csrf},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
 }
 
 function projectWorkflowsInfo()
@@ -468,7 +534,7 @@ function projectWorkflowsInfo()
         {name:"project_uid",value:projectId},
         {name:"x-csrf-token",value:csrf},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processProjectsResponse,undefined,headers,true,false);   
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processProjectsResponse,undefined,headers,true,false);   
 }
 
 function projectFlowServicesInfo()
@@ -484,7 +550,7 @@ function projectFlowServicesInfo()
         {name:"project_uid",value:projectId},
         {name:"x-csrf-token",value:csrf},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
 }
 
 
@@ -498,7 +564,7 @@ function execUserInfo()
         {name:"authtoken",value:authtoken},
         {name:"accept",value:"application/json"},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
 }
 
 /** Logs in via Software AG Cloud! */
@@ -506,7 +572,7 @@ function loginPhase1()
 {    
     debug("LOGIN Phase 1")
     var endPoint = url + "/integration/sagcloud/";
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",loginResponse,undefined,undefined,true,false);
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",loginResponse,undefined,undefined,true,false);
     
 }
 
@@ -516,7 +582,7 @@ function loginPhase2()
     var endPoint = nextUrl;
     debug("Next URL [" + endPoint + "]");
     formUrl = endPoint;
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",loginResponse,undefined,undefined,true,false);   
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",loginResponse,undefined,undefined,true,false);   
 }
 
 function loginPhase3()
@@ -533,7 +599,7 @@ function loginPhase3()
     var form = [{name:"username",value:username},
                 {name:"password",value:password}];
     
-    rest.custom(endPoint,undefined,undefined,60,undefined,form,"POST",loginResponse,undefined,undefined,true,false);
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,form,"POST",loginResponse,undefined,undefined,true,false);
 }
 
 function loginRedirectPhase(inId)
@@ -545,7 +611,7 @@ function loginRedirectPhase(inId)
     var headers = [
         {name:"Accept",value:"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",loginResponse,undefined,undefined,true,false);   
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",loginResponse,undefined,undefined,true,false);   
 }
 
 function loginUserPhase(inId)
@@ -558,7 +624,7 @@ function loginUserPhase(inId)
         {name:"authtoken",value:authtoken},
         {name:"accept",value:"application/json"},
     ];
-    rest.custom(endPoint,undefined,undefined,60,undefined,undefined,"GET",processUserResponse,undefined,headers,true,false);   
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processUserResponse,undefined,headers,true,false);   
 }
 
 function checkResponse(res,body)
@@ -636,10 +702,10 @@ function processProjectsResponse(url,err,body,res){
 
         
         if(prettyprint==true){
-            dbg.message(JSON.stringify(output,null,4),5);
+            dbg.message(JSON.stringify(output,null,4),-1);
         }
         else{
-            dbg.message((JSON.stringify(output)),5);
+            dbg.message((JSON.stringify(output)),-1);
         }        
     }
     else
@@ -653,10 +719,10 @@ function processResponse(url,err,body,res){
     if(res.statusCode==200)
     {
         if(prettyprint==true){
-            dbg.message(JSON.stringify(body,null,4),5);
+            dbg.message(JSON.stringify(body,null,4),-1);
         }
         else{
-            dbg.message((JSON.stringify(body)),5);
+            dbg.message((JSON.stringify(body)),-1);
         }        
     }
     else
@@ -759,4 +825,6 @@ function loginResponse(url,err,body,res){
     
 }
 
-module.exports = {init,user,stages,projectWorkflows,projectFlowservices,connectorAccounts,getProjectAccountConfig,searchProject,getMonitorInfo,workflowResubmit,projectDeployments};
+module.exports = {init,user,stages,projectWorkflows,projectFlowservices,connectorAccounts,
+    getProjectAccountConfig,searchProject,getMonitorInfo,workflowResubmit,
+    projectDeployments,messagingCreate,messagingStats,messagingDelete};

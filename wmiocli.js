@@ -672,7 +672,29 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.workflowResubmit(restartOrResume, startDate, endDate, projectId,workflowId);
   });
   
-  
+  program.command('experimental-messaging-create <queue-or-topic> <name> <project-id>',{hidden: true})
+  .description('Create a messaging queue or topic')
+  .action((queueOrTopc,name,projectId) => {
+    checkOptions();
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.messagingCreate(queueOrTopc,projectId,name);
+  });
+
+  program.command('experimental-messaging-delete <queue-or-topic> <name> <project-id>',{hidden: true})
+  .description('Delete a messaging queue or topic')
+  .action((queueOrTopc,name,projectId) => {
+    checkOptions();
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.messagingDelete(queueOrTopc,projectId,name);
+  });
+
+  program.command('experimental-messaging-stats <name> <project-id>',{hidden: true})
+  .description('Get Messaging Stats')
+  .action((name,projectId) => {
+    checkOptions();
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.messagingStats(projectId,name);
+  });  
   
 program.parse();
 
