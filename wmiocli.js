@@ -3,6 +3,8 @@
  * Copyright 2022 Software AG
  * Apache-2.0
  */
+
+const versionNo = "2022.10.1"
 const { Command, Option } = require('commander');
 const { exit } = require('process');
 const readline = require('readline-sync');
@@ -134,7 +136,7 @@ const program = new Command();
 program
 
 //Program Info
-  .version('2022.07.3')
+  .version(versionNo)
 
 //required options
   .option('-d, --domain <tenantDomain>', 'Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"')
