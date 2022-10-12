@@ -4,7 +4,7 @@ This requires you to provide your tenant domain name, along with a user and pass
 The --help parameter provides further information on how to use this along with some examples of its usage.
 
 This CLI tool has been tested against
-* webMethods.io Integration v10.12
+* webMethods.io Integration v10.15
 
 # License
 This project is licensed under the Apache 2.0 License - see the LICENSE file for details
