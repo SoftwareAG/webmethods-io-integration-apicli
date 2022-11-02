@@ -659,7 +659,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.projectDeployments(projectId);
   });
 
-  program.command('experimental-workflow-monitor [execution-status] [start-date] [end-date] [project-id] [workflow-id] ',{hidden: true})
+  program.command('experimental-workflow-monitor [execution-status] [start-date] [end-date] [project-id] [workflow-id]',{hidden: true})
   .description('List Workflow Monitor')
   .action((executionStatus,startDate,endDate,projectId,workflowId) => {
     checkOptions();
