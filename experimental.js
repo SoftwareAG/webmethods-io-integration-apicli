@@ -11,7 +11,7 @@
 
 const request = require("request");
 const rest = require("./rest.js");
-
+const crypto = require ('crypto');
 
 
 var domainName, username,password,timeout;
@@ -35,6 +35,12 @@ var finalCall;
 var loginStageCounter = 0;
 const maxRunningWorkflows = 20;
 
+
+function generateUUID(){
+    var hexstring = crypto.randomBytes(16).toString("hex"); 
+    var guidstring = "UI-" + hexstring.substring(0,8) + "-" + hexstring.substring(8,12) + "-" + hexstring.substring(12,16) + "-" + hexstring.substring(16,20) + "-" + hexstring.substring(20);
+    return guidstring;
+}
 
 function debug(message){
     dbg.message("<EXPERIMENTAL> " + message,4);
@@ -206,7 +212,9 @@ function setHeaders()
     var headers = [
         {name:"authtoken",value:authtoken},
         {name:"accept",value:"application/json"},
-        {name:"x-csrf-token",value:csrf},
+        //{name:"x-csrf-token",value:csrf},
+        {name:"X-Requested-With",value:"XMLHttpRequest"},
+        {name:"X-Request-ID",value:generateUUID()},
     ];
     return headers;
 }
@@ -362,7 +370,8 @@ function processListResponse(url,err,body,res){
     else
     {
         dbg.message("Failed to get Running Workflows",1)
-        dbg.message(err,1);
+        if(body!=null)dbg.message(JSON.stringify(body),1);
+        if(err!=null)dbg.message(JSON.stringify(err),2);
         process.exit(99);
     }
 }
@@ -393,8 +402,8 @@ function processRunningResponse(url,err,body,res){
     else
     {
         dbg.message("Failed to get Running Workflows",1)
-        dbg.message(err,4)
-        dbg.message(body,4)
+        if(body!=null)dbg.message(JSON.stringify(body),1);
+        if(err!=null)dbg.message(JSON.stringify(err),2);
         process.exit(99);
     }
 }

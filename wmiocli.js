@@ -4,7 +4,7 @@
  * Apache-2.0
  */
 
-const versionNo = "2022.10.1"
+const versionNo = "2022.11.1"
 const { Command, Option } = require('commander');
 const { exit } = require('process');
 const readline = require('readline-sync');
@@ -17,6 +17,7 @@ var recipe = require('./recipe.js');
 var flowservice = require('./flowservice.js');
 var experimental = require('./experimental.js');
 const { setLogLevel } = require('./debug.js');
+
 
 dbg = require('./debug.js');
 prettyprint = false;
@@ -658,7 +659,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.projectDeployments(projectId);
   });
 
-  program.command('experimental-workflow-monitor [execution-status] [start-date] [end-date] [project-id] [workflow-id] ',{hidden: true})
+  program.command('experimental-workflow-monitor [execution-status] [start-date] [end-date] [project-id] [workflow-id]',{hidden: true})
   .description('List Workflow Monitor')
   .action((executionStatus,startDate,endDate,projectId,workflowId) => {
     checkOptions();
