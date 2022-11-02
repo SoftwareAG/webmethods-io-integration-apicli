@@ -36,12 +36,9 @@ var loginStageCounter = 0;
 const maxRunningWorkflows = 20;
 
 
-function generateUUID()
-{
-    //UI-93290e40-3e26-42a9-8bc3-b50c32b7115b
+function generateUUID(){
     var hexstring = crypto.randomBytes(16).toString("hex"); 
     var guidstring = "UI-" + hexstring.substring(0,8) + "-" + hexstring.substring(8,12) + "-" + hexstring.substring(12,16) + "-" + hexstring.substring(16,20) + "-" + hexstring.substring(20);
-    //var uuid = "UI-" + crypto;
     return guidstring;
 }
 
