@@ -341,7 +341,7 @@ function processRunningResponse(url,err,body,res){
     }
     else
     {
-        dbg.message("DAVE Failed to get Running Workflows",1);
+        dbg.message("Failed to get Running Workflows",1);
         dbg.message(err,1);
         process.exit(99);
     }
@@ -370,7 +370,8 @@ function processListResponse(url,err,body,res){
     else
     {
         dbg.message("Failed to get Running Workflows",1)
-        dbg.message(err,1);
+        if(body!=null)dbg.message(JSON.stringify(body),1);
+        if(err!=null)dbg.message(JSON.stringify(err),2);
         process.exit(99);
     }
 }
