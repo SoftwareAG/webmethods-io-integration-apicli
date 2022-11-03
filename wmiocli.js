@@ -4,7 +4,7 @@
  * Apache-2.0
  */
 
-const versionNo = "2022.11.1"
+const versionNo = "2022.11.2"
 const { Command, Option } = require('commander');
 const { exit } = require('process');
 const readline = require('readline-sync');

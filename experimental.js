@@ -249,7 +249,7 @@ function processResubmissions(reprocessCount)
 function processSingleResubmission(a,b, vbid)
 {
     dbg.message("Processing Resubmission [" + a + " of " + b + "] Action [" + startOrResume + "] VBID [" + vbid + "]",);
-    var endPoint = "https://cpointegrationdev.int-aws-de.webmethods.io/enterprise/v1/tenant/account/billlogs/" + vbid;
+    var endPoint = "https://" + domainName + "/enterprise/v1/tenant/account/billlogs/" + vbid;
     debug("Next URL [" + endPoint + "]");
     //var body=processMonitorBody();
     //body.limit=reprocessCount;
