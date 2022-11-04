@@ -321,6 +321,7 @@ function del(restEndPoint,user,pass,timeout,data,callback){
 }
 
 function custom(restEndPoint,user,pass,timeout,jsonBody,formBody,type,callback,cookies,headers,jsonFlag,redirect){
+    dbg.message("Custom REST call Started",4);
     var options = {
         url: restEndPoint,
         method: type,
