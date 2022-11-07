@@ -12,9 +12,6 @@
 const request = require("request");
 const rest = require("./rest.js");
 const crypto = require ('crypto');
-const { unwatchFile } = require("fs");
-const { brotliDecompress } = require("zlib");
-
 
 var domainName, username,password,timeout;
 var prettyprint = false;
