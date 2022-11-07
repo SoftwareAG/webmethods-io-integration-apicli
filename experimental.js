@@ -13,7 +13,6 @@ const request = require("request");
 const rest = require("./rest.js");
 const crypto = require ('crypto');
 
-
 var domainName, username,password,timeout;
 var prettyprint = false;
 var url;
@@ -33,7 +32,16 @@ var messagingName;
 var nextUrl,formUrl;
 var finalCall;
 var loginStageCounter = 0;
+var vbid;
+var flowuid; 
+var payloaduid; 
+var projectuid;
+var data;
+var type;
+
+
 const maxRunningWorkflows = 20;
+
 
 
 function generateUUID(){
@@ -48,16 +56,16 @@ function debug(message){
 
 function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     
-    dbg.message("EXPERIMENTAL/UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK",4);
+    dbg.message("EXPERIMENTAL/UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK",3);
     domainName = inDomainName;
     username = inUsername;
     password = inPassword;
     timeout = inTimeout;
     prettyprint = inPrettyprint;
     url = "https://" + domainName;
-    dbg.message("Username [" + username + "]",4);
-    dbg.message("URL      [" + url + "]",4);
-    dbg.message("Timeout  [" + timeout + "]",4);
+    dbg.message("<EXPERIMENTAL>Username [" + username + "]",4);
+    dbg.message("<EXPERIMENTAL>URL      [" + url + "]",4);
+    dbg.message("<EXPERIMENTAL>Timeout  [" + timeout + "]",4);
 }
 
 function user()
@@ -102,7 +110,7 @@ function getProjectAccountConfig(inProjectId)
 
 function projectDeployments(inProjectId)
 {
-    dbg.message("Listing project deployments for projectId [" + inProjectId + "]",4);
+    dbg.message("<EXPERIMENTAL>Listing project deployments for projectId [" + inProjectId + "]",4);
     projectId = inProjectId;
     finalCall = getProjectDeployments;
     loginPhase1();
@@ -167,6 +175,7 @@ function workflowResubmit(instartOrResume, inStartDate,inEndDate, inProjectId,in
 function debugMonitorInfo()
 {
     debug("Monitor Project:         [" + projectName + "]");
+    debug("Monitor Project ID:      [" + projectId  + "]");
     debug("Monitor workflowId:      [" + workflowId + "]");
     debug("Monitor executionStatus: [" + executionStatus + "]");
     debug("Monitor startDate:       [" + startDate + "]");
@@ -177,7 +186,7 @@ function processMonitorBody()
 {
     var body={};
     
-    if(endDate)body.end_date = endDate;
+    
     if(startDate)body.start_date = startDate;
     else
     {
@@ -198,12 +207,13 @@ function processMonitorBody()
         body.start_date=startDate;
         body.end_date=endDate;
     }
-
+    if(endDate)body.end_date = endDate;
     if(projectId)body.projects=[projectId]
     if(workflowId)body.workflows = [workflowId];
+    else body.workflows=[];
     if(executionStatus)body.execution_status = [executionStatus];
-    body.skip=0;
     body.limit=20;
+    body.skip=0;
     return body;
 }
 
@@ -212,9 +222,9 @@ function setHeaders()
     var headers = [
         {name:"authtoken",value:authtoken},
         {name:"accept",value:"application/json"},
-        //{name:"x-csrf-token",value:csrf},
         {name:"X-Requested-With",value:"XMLHttpRequest"},
         {name:"X-Request-ID",value:generateUUID()},
+        {name:"project_uid",value:projectId},
     ];
     return headers;
 }
@@ -232,8 +242,7 @@ function checkResubmissions()
     rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processRunningResponse,undefined,headers,true,false);  
 }
 
-function processResubmissions(reprocessCount)
-{
+function processResubmissions(fetchSize,reprocessCount){
     debug("Process Resubmissions")
     debugMonitorInfo();
     //Check running
@@ -246,45 +255,104 @@ function processResubmissions(reprocessCount)
     rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processListResponse,undefined,headers,true,false);  
 }
 
-function processSingleResubmission(a,b, vbid)
-{
-    dbg.message("Processing Resubmission [" + a + " of " + b + "] Action [" + startOrResume + "] VBID [" + vbid + "]",);
-    var endPoint = "https://" + domainName + "/enterprise/v1/tenant/account/billlogs/" + vbid;
+function processSingleResubmission(a,b, invbid){
+    dbg.message("<EXPERIMENTAL>Processing Resubmission [" + (a+1) + " of " + b + "] Action [" + startOrResume + "] VBID [" + invbid + "]",3);
+    var endPoint = "https://" + domainName + "/enterprise/v1/tenant/account/billlogs/" + invbid;
     debug("Next URL [" + endPoint + "]");
-    //var body=processMonitorBody();
-    //body.limit=reprocessCount;
-    //body.execution_status=["failed"];
     var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processSingleResubmissionResponse,undefined,headers,true,false);  
 }
 
-function finishProcessSingleResubmission(vbid,wfuid,payloaduid,projectuid,flowname,stoptime)
+
+function getThePayload(invbid){
+    dbg.message("<EXPERIMENTAL>" + invbid + ":Fetching Payload For Restart - VBID [" + invbid + "]",4);
+    var endPoint = "https://" + domainName + "/enterprise/v1/payloads?bill_uid=" + invbid
+    dbg.message("<EXPERIMENTAL>" +invbid + ":getThePayload Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processPayloadResponse,undefined,headers,true,false);  
+}
+
+function finishProcessSingleResubmission(invbid,inwfuid,inPayloaduid,projectuid,data)
 {
-    dbg.message("Actioning Resubmission Action [" + startOrResume + "] VBID [" + vbid + "]",3);
-    var endPoint = "https://" + domainName + "/enterprise/v1/execute/" + wfuid + "/resume"
-    debug("Next URL [" + endPoint + "]");
-    //var body=processMonitorBody();
-    //body.limit=reprocessCount;
-    //body.execution_status=["failed"];
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-        {name:"x-csrf-token",value:csrf},
-        {name:"project_uid",value:projectuid},
-    ];
-    var body = {"bill_uid":vbid,"__is_checkpoint_run__":true,"payload_uid":payloaduid,"checkpointLogs":[]};
+    dbg.message("<EXPERIMENTAL>" +invbid + ":Actioning Resubmission Action [" + startOrResume + "] VBID [" + invbid + "]",4);
+    var endPoint
+    
+    if (startOrResume == "resume") endPoint = "https://" + domainName + "/enterprise/v1/execute/" + inwfuid + "/resume";
+    else endPoint = "https://" + domainName + "/enterprise/v1/execute/" + invbid + "/restart";
+    
+    dbg.message("<EXPERIMENTAL>" +invbid + ":Next URL [" + endPoint + "]",4);
+    var headers = setHeaders();
+    var body;
+    if(startOrResume=="resume"){ 
+        body = {"bill_uid":invbid,"__is_checkpoint_run__":true,"payload_uid":inPayloaduid,"checkpointLogs":[]};
+    }
+    else{
+       body={"payload": {data,"type":type,"bill_uid":invbid,"flow_uid":inwfuid,"tenant_uid":uid,"uid":inPayloaduid}};
+    }
+
     rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processFinalSingleResubmissionResponse,undefined,headers,true,false);  
 }
 
-function processFinalSingleResubmissionResponse(url,err,body,res){
+function processPayloadResponse(url,err,body,res){
     if(res.statusCode==200)
     {
-        dbg.message("Processed",3);
+        data={};
+        dbg.message("<EXPERIMENTAL>Processing Payload Response",4);
+        dbg.message("<EXPERIMENTAL>URL" + url,4);
+        if(body)dbg.message("<EXPERIMENTAL>JSON RESP\n" + JSON.stringify(body),4);
+        if(res) dbg.message("<EXPERIMENTAL>RES\n" + JSON.stringify(res),4);
+        if(body.output.length==1 && body.output[0].data){
+            data = body.output[0].data;
+        }
+        else {
+            dbg.message("<EXPERIMENTAL>Found no payload response",4);
+            if(body!=null)dbg.message(JSON.stringify(body),4);
+        }
+
+        if(body.output.length==1 && body.output[0].type)
+        {
+            type = body.output[0].type;
+            if(body)dbg.message("<EXPERIMENTAL>Payload Resp: " + JSON.stringify(body),4);
+            finishProcessSingleResubmission(vbid,flowuid,payloaduid,projectuid,data);
+        }
+        else{
+            if(body!=null)dbg.message(JSON.stringify(body),2);
+            dbg.message("<EXPERIMENTAL>Unable to determine type",2);
+        }
+
+        
     }
     else
     {
-        dbg.message("Failed to Resubmit entry",1)
-        dbg.message(body,1);
+        dbg.message("<EXPERIMENTAL>Failed to " + "restart" + " entry",1)
+        if(body!=null)dbg.message(JSON.stringify(body),1);
+        if(err!=null)dbg.message(JSON.stringify(err),1);
+        process.exit(99);
+    }
+}
+
+
+function processFinalSingleResubmissionResponse(url,err,body,res){
+    if(body!=null)dbg.message("<EXPERIMENTAL> Submission Resp:" + JSON.stringify(body),4);
+    if(res.statusCode==200)
+    {
+        var respvbid,respstatus;
+        if(body.output.run){
+            respvbid = body.output.run.bill_uid
+            respstatus = body.output.run.status
+        }
+        else{
+            respvbid = body.output.bill_uid;
+            respstatus = body.output.status;
+        }
+        
+        dbg.message("<EXPERIMENTAL>Processed VBID: " + respvbid + " - New Status [" + respstatus + "]",3);
+    }
+    else
+    {
+        dbg.message("<EXPERIMENTAL>Failed to " + startOrResume + " Monitor item",1)
+        if(body!=null)dbg.message("<EXPERIMENTAL>" + JSON.stringify(body),1);
+        if(err!=null)dbg.message("<EXPERIMENTAL>"+ JSON.stringify(err),1);
         process.exit(99);
     }
 }
@@ -294,58 +362,76 @@ function processSingleResubmissionResponse(url,err,body,res){
     {
         if(body.output.uid)
         {
-            dbg.message("Found Monitor Entry",3);
-            dbg.message("VBID         [" + body.output.uid + "]",4);
-            dbg.message("Flow UID     [" + body.output.flow_uid + "]",4);
-            dbg.message("Payload UID  [" + body.output.payload_uid + "]",4);
-            dbg.message("Project_UID  [" + body.output.project_uid + "]",4);
-            dbg.message("Flow Name    [" + body.output.flow_name + "]",4);
-            dbg.message("Stop time    [" + body.output.stop_time + "]",4);
-            finishProcessSingleResubmission(body.output.uid,body.output.flow_uid,body.output.payload_uid,body.output.project_uid,body.output.flow_name,body.output.stop_time); 
+            dbg.message("<EXPERIMENTAL>"+"Found Monitor Entry - VBID[" + body.output.uid +"]",4);
+            dbg.message("<EXPERIMENTAL>"+"Flow UID     [" + body.output.flow_uid + "]",4);
+            dbg.message("<EXPERIMENTAL>"+"Payload UID  [" + body.output.payload_uid + "]",4);
+            dbg.message("<EXPERIMENTAL>"+"Project_UID  [" + body.output.project_uid + "]",4);
+            dbg.message("<EXPERIMENTAL>"+"Flow Name    [" + body.output.flow_name + "]",4);
+            dbg.message("<EXPERIMENTAL>"+"Stop time    [" + body.output.stop_time + "]",4);
+            dbg.message("<EXPERIMENTAL>"+"Restarted    [" + body.output.restarted + "]",4)
+            dbg.message("<EXPERIMENTAL>"+"Manual Run    [" + body.output.manual_run + "]",4)
+            dbg.message("<EXPERIMENTAL>"+"hide_resume    [" + body.output.hide_resume + "]",4)
+            dbg.message("<EXPERIMENTAL>"+"JSON RESPONSE\n" + JSON.stringify(body) + "\n",4);
+
+            
+
+ 
+            vbid = body.output.uid;
+            flowuid = body.output.flow_uid;
+            payloaduid = body.output.payload_uid;
+            projectuid = body.output.project_uid;
+
+
+            if(startOrResume.indexOf("restart")==0){
+                debug("In restart procedure");
+                if(body.output.manual_run == true){
+                    dbg.message("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Restart Not Available",2);
+                }
+                else {
+                    if(startOrResume=="restart-all"){
+                        debug("is a restart all)");
+                        if(body.output.restarted==true)dbg.message("<EXPERIMENTAL>"+ "Restarting [" + body.output.uid + "] when this has been done previously.",2);
+                        getThePayload(body.output.uid);
+                    }
+                    else{
+                        debug("is a normal restart)");
+                        if(body.output.restarted != true){
+                            dbg.message("<EXPERIMENTAL>"+ "Restarting [" + body.output.uid + "]",4);
+                            getThePayload(body.output.uid);
+                        }
+                        else{
+                            dbg.message("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Has been restarted previously. Use restart-all as the option if you need to restart this",2);
+                        }
+                    }
+                }
+            }
+            
+            if(startOrResume=="resume"){
+                if(body.output.hide_resume == false){
+                    dbg.message("<EXPERIMENTAL>"+ "Resuming [" + body.output.uid + "]",4);
+                    finishProcessSingleResubmission(body.output.uid,body.output.flow_uid,body.output.payload_uid,body.output.project_uid); 
+                }
+                else
+                {
+                    dbg.message("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Resume is not available",4);
+                }
+
+            } 
         }
         else{
 
-            dbg.message("Not able to find monitor entry",1);
+            dbg.message("<EXPERIMENTAL>"+ "Not able to find monitor entry",1);
         }
     }
     else
     {
-        dbg.message("Failed to get Monitor entry",1)
-        dbg.message(body,1);
+        dbg.message("<EXPERIMENTAL>"+"Failed to get Monitor entry",1)
+        dbg.message(JSON.stringify(body),1);
         process.exit(99);
     }
 }
 
-function processRunningResponse(url,err,body,res){
-    if(res.statusCode==200)
-    {
-        //... do something next      
-        if(body.output.count==0)
-        {
-            dbg.message("No Workflows Running",4)
-            dbg.message("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",4);
-        }
-        else{
-            dbg.message("Workflows Running [" +body.output.count + "]",2)
-            if(body.output.count<maxRunningWorkflows)
-            {
-                dbg.message("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",2);
-            }
-            else
-            {
-                dbg.message("Maximum Workflow Executions already in progress - exiting",1);
-                process.exit(0);
-            }
-        }
-        processResubmissions(maxRunningWorkflows - body.output.count);
-    }
-    else
-    {
-        dbg.message("Failed to get Running Workflows",1);
-        dbg.message(err,1);
-        process.exit(99);
-    }
-}
+
 
 function processListResponse(url,err,body,res){
     if(res.statusCode==200)
@@ -354,12 +440,12 @@ function processListResponse(url,err,body,res){
         //... do something next      
         if(body.output.count==0)
         {
-            dbg.message("No Workflows To Resubmit",3);
+            dbg.message("<EXPERIMENTAL>"+"No Workflows To Resubmit",3);
             process.exit(0);
         }
         else{
 
-            dbg.message("Workflow Instances To Resubmit [" + body.output.logs.length + " of " + body.output.count + "]",3);
+            dbg.message("<EXPERIMENTAL>"+"Workflow Instances To Resubmit [" + body.output.logs.length + " of " + body.output.count + "]",3);
             for(var i=0;i<body.output.logs.length;i++)
             {
                 processSingleResubmission(i,body.output.logs.length,body.output.logs[i].uid);
@@ -369,7 +455,7 @@ function processListResponse(url,err,body,res){
     }
     else
     {
-        dbg.message("Failed to get Running Workflows",1)
+        dbg.message("<EXPERIMENTAL>"+"Failed to get Running Workflows",1)
         if(body!=null)dbg.message(JSON.stringify(body),1);
         if(err!=null)dbg.message(JSON.stringify(err),2);
         process.exit(99);
@@ -377,31 +463,26 @@ function processListResponse(url,err,body,res){
 }
 
 function processRunningResponse(url,err,body,res){
-    if(res.statusCode==200)
-    {
+    if(res.statusCode==200){
         //... do something next      
-        if(body.output.count==0)
-        {
-            dbg.message("No Workflows Running",4)
-            dbg.message("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
+        if(body.output.count==0){
+            dbg.message("<EXPERIMENTAL>"+"No Workflows Running",3)
+            dbg.message("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
         }
         else{
-            dbg.message("Workflows Running [" +body.output.count + "]",3)
-            if(body.output.count<maxRunningWorkflows)
-            {
-                dbg.message("Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
+            dbg.message("<EXPERIMENTAL>"+"Workflows Running [" +body.output.count + "]",3)
+            if(body.output.count<maxRunningWorkflows){
+                dbg.message("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
             }
-            else
-            {
-                dbg.message("Maximum Workflow Executions Currently in progress - exiting",1);
+            else{
+                dbg.message("<EXPERIMENTAL>"+"Maximum Workflow Executions Currently in progress - exiting",2);
                 process.exit(0);
             }
         }
-        processResubmissions(maxRunningWorkflows - body.output.count);
+        processResubmissions(100, maxRunningWorkflows - body.output.count);
     }
-    else
-    {
-        dbg.message("Failed to get Running Workflows",1)
+    else{
+        dbg.message("<EXPERIMENTAL>"+"Failed to get Running Workflows",1)
         if(body!=null)dbg.message(JSON.stringify(body),1);
         if(err!=null)dbg.message(JSON.stringify(err),2);
         process.exit(99);
@@ -416,7 +497,7 @@ function doMessagingCreate()
     var body;
     if(queueOrTopic=="queue")body={"queueName":messagingName};
     else if (queueOrTopic=="topic")body={"topicName":messagingName}
-    else dbg.message("Please provide either 'queue' or 'topic'",1);
+    else dbg.message("<EXPERIMENTAL>"+"Please provide either 'queue' or 'topic'",1);
     var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,undefined,headers,true,false);  
 }
@@ -429,7 +510,7 @@ function doMessagingDelete()
     var body;
     if(queueOrTopic=="queue")body={"queueName":messagingName};
     else if (queueOrTopic=="topic")body={"topicName":messagingName}
-    else dbg.message("Please provide either 'queue' or 'topic'",1);
+    else dbg.message("<EXPERIMENTAL>"+"Please provide either 'queue' or 'topic'",1);
     var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,60,body,undefined,"DELETE",processResponse,undefined,headers,true,false);  
     //rest.del(endPoint,undefined,undefined,timeout,undefined,processResponse);
@@ -458,30 +539,19 @@ function getLogs()
 
 function searchProjectsByName()
 {
-    dbg.message("Search Projects By Name [" + projectName + "]",4);
-    var endPoint = "https://" + domainName + "/enterprise/v1/projects?limit=25&skip=0&q=" + projectName;
-    dbg.message("Next URL [" + endPoint + "]",4);
-
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-        {name:"x-csrf-token",value:csrf},
-    ];
+    dbg.message("<EXPERIMENTAL>"+"Search Projects By Name [" + projectName + "]",4);
+    var endPoint = "https://" + domainName + "/enterprise/v1/projects?limit=1000&skip=0&q=" + projectName;
+    dbg.message("<EXPERIMENTAL>"+"Next URL [" + endPoint + "]",4);
+    var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
 }
 
 function getProjectDeployments()
 {
-    dbg.message("Executing Project Deployments call",4);
+    dbg.message("<EXPERIMENTAL>"+"Executing Project Deployments call",4);
     var endPoint = "https://" + domainName + "/enterprise/v1/deployments";
-    dbg.message("Next URL [" + endPoint + "]",4);
-
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-        {name:"project_uid",value:projectId},
-        {name:"x-csrf-token",value:csrf},
-    ];
+    dbg.message("<EXPERIMENTAL>"+"Next URL [" + endPoint + "]",4);
+    var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
 }
 
@@ -490,12 +560,7 @@ function stageInfo()
     debug("Stage Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/stages?allRegion=false";
     debug("Next URL [" + endPoint + "]");
-
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-        {name:"x-csrf-token",value:csrf},
-    ];
+    var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
 }
 
@@ -504,13 +569,7 @@ function getProjectAccountConfigInfo()
     debug("Project Account Config Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/configdata";
     debug("Next URL [" + endPoint + "]");
-
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-        {name:"project_uid",value:projectId},
-        {name:"x-csrf-token",value:csrf},
-    ];
+    var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
 }
 
@@ -520,13 +579,7 @@ function usedConnectorAccountsInfo()
     debug("Used Connectors Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/user/auths";
     debug("Next URL [" + endPoint + "]");
-
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-        {name:"project_uid",value:projectId},
-        {name:"x-csrf-token",value:csrf},
-    ];
+    var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
 }
 
@@ -536,13 +589,7 @@ function projectWorkflowsInfo()
     debug("Project Workflows Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/flows?limit=1000&skip=0&filter=recent&tags=&query=";
     debug("Next URL [" + endPoint + "]");
-
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-        {name:"project_uid",value:projectId},
-        {name:"x-csrf-token",value:csrf},
-    ];
+    var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processProjectsResponse,undefined,headers,true,false);   
 }
 
@@ -552,27 +599,17 @@ function projectFlowServicesInfo()
     debug("Project FlowServices Info");
     var endPoint = "https://" + domainName + "/integration/rest/ut-flow/flow-metadata/" + projectId + "?skip=0&limit=1000";
     debug("Next URL [" + endPoint + "]");
-
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-        {name:"project_uid",value:projectId},
-        {name:"x-csrf-token",value:csrf},
-    ];
+    var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
 }
 
 
 function execUserInfo()
 {
-    debug("Exec User Info");
+    debug("<EXPERIMENTAL>"+"Exec User Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/user";
     debug("Next URL [" + endPoint + "]");
-
-    var headers = [
-        {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
-    ];
+    var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
 }
 
@@ -753,8 +790,9 @@ function processUserResponse(url,err,body,res){
     }
 
     //Now run the final call
+    dbg.message("<EXPERIMENTAL>Logged in",3);
     if(finalCall!==undefined)finalCall();
-    else debug("No final call set");
+    else dbg.message("No final call set",4);
     
 }
 
