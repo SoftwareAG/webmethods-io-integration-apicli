@@ -245,8 +245,7 @@ function checkResubmissions()
     rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processRunningResponse,undefined,headers,true,false);  
 }
 
-function processResubmissions(reprocessCount)
-{
+function processResubmissions(fetchSize,reprocessCount){
     debug("Process Resubmissions")
     debugMonitorInfo();
     //Check running
@@ -259,8 +258,7 @@ function processResubmissions(reprocessCount)
     rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processListResponse,undefined,headers,true,false);  
 }
 
-function processSingleResubmission(a,b, invbid)
-{
+function processSingleResubmission(a,b, invbid){
     dbg.message("<EXPERIMENTAL>Processing Resubmission [" + (a+1) + " of " + b + "] Action [" + startOrResume + "] VBID [" + invbid + "]",3);
     var endPoint = "https://" + domainName + "/enterprise/v1/tenant/account/billlogs/" + invbid;
     debug("Next URL [" + endPoint + "]");
@@ -269,8 +267,7 @@ function processSingleResubmission(a,b, invbid)
 }
 
 
-function getThePayload(invbid)
-{
+function getThePayload(invbid){
     dbg.message("<EXPERIMENTAL>" + invbid + ":Fetching Payload For Restart - VBID [" + invbid + "]",4);
     var endPoint = "https://" + domainName + "/enterprise/v1/payloads?bill_uid=" + invbid
     dbg.message("<EXPERIMENTAL>" +invbid + ":getThePayload Next URL [" + endPoint + "]");
@@ -439,37 +436,6 @@ function processSingleResubmissionResponse(url,err,body,res){
 
 
 
-function processRunningResponse(url,err,body,res){
-    if(res.statusCode==200)
-    {
-        //... do something next      
-        if(body.output.count==0)
-        {
-            dbg.message("<EXPERIMENTAL>"+"No Workflows Running",4)
-            dbg.message("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",4);
-        }
-        else{
-            dbg.message("<EXPERIMENTAL>"+"Workflows Running [" +body.output.count + "]",2)
-            if(body.output.count<maxRunningWorkflows)
-            {
-                dbg.message("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",2);
-            }
-            else
-            {
-                dbg.message("<EXPERIMENTAL>"+"Maximum Workflow Executions already in progress - exiting",1);
-                process.exit(0);
-            }
-        }
-        processResubmissions(maxRunningWorkflows - body.output.count);
-    }
-    else
-    {
-        dbg.message("<EXPERIMENTAL>"+"Failed to get Running Workflows",1);
-        if(body) dbg.message(JSON.stringify(body),1);
-        process.exit(99);
-    }
-}
-
 function processListResponse(url,err,body,res){
     if(res.statusCode==200)
     {
@@ -500,30 +466,25 @@ function processListResponse(url,err,body,res){
 }
 
 function processRunningResponse(url,err,body,res){
-    if(res.statusCode==200)
-    {
+    if(res.statusCode==200){
         //... do something next      
-        if(body.output.count==0)
-        {
-            dbg.message("<EXPERIMENTAL>"+"No Workflows Running",4)
+        if(body.output.count==0){
+            dbg.message("<EXPERIMENTAL>"+"No Workflows Running",3)
             dbg.message("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
         }
         else{
             dbg.message("<EXPERIMENTAL>"+"Workflows Running [" +body.output.count + "]",3)
-            if(body.output.count<maxRunningWorkflows)
-            {
+            if(body.output.count<maxRunningWorkflows){
                 dbg.message("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
             }
-            else
-            {
+            else{
                 dbg.message("<EXPERIMENTAL>"+"Maximum Workflow Executions Currently in progress - exiting",2);
                 process.exit(0);
             }
         }
-        processResubmissions(maxRunningWorkflows - body.output.count);
+        processResubmissions(100, maxRunningWorkflows - body.output.count);
     }
-    else
-    {
+    else{
         dbg.message("<EXPERIMENTAL>"+"Failed to get Running Workflows",1)
         if(body!=null)dbg.message(JSON.stringify(body),1);
         if(err!=null)dbg.message(JSON.stringify(err),2);
