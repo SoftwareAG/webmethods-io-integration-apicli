@@ -33,6 +33,7 @@ var nextUrl,formUrl;
 var finalCall;
 var loginStageCounter = 0;
 var vbid;
+var format;
 var flowuid; 
 var payloaduid; 
 var projectuid;
@@ -172,6 +173,16 @@ function workflowResubmit(instartOrResume, inStartDate,inEndDate, inProjectId,in
     loginPhase1();
 }
 
+
+function vbidAnalysis(inVbid, inFormat)
+{
+    vbid = inVbid
+    format = inFormat;
+    finalCall = getVbidAnalysis;
+    loginPhase1();
+}
+
+
 function debugMonitorInfo()
 {
     debug("Monitor Project:         [" + projectName + "]");
@@ -227,6 +238,18 @@ function setHeaders()
         {name:"project_uid",value:projectId},
     ];
     return headers;
+}
+
+
+function getVbidAnalysis()
+{
+    
+    dbg.message("<EXPERIMENTAL>Getting VBID analysis [" + vbid + "]");
+    var endPoint = "https://" + domainName + "/enterprise/v1/tenant/logs/" + vbid + "?field=created_at&direction=asc";
+    debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processVbidResponse,undefined,headers,true,false);  
+
 }
 
 function checkResubmissions()
@@ -356,6 +379,107 @@ function processFinalSingleResubmissionResponse(url,err,body,res){
         process.exit(99);
     }
 }
+
+
+
+function logsToCSV(logsJson){
+
+    var csv="ActivityId,ActivityLabel,ActivityType,Message,ActionDate,ElapsedMilliSeconds\n";
+    var activityId, activityLabel,activityType, message, actype, actionDate, prevDate;
+    var sep = ",";
+
+    for(var i=0;i<logsJson.output.objects.length;i++){
+        dbg.message("<EXPERIMENTAL>"+"CSV Conversion [" + i + "]",4);
+        activityId = logsJson.output.objects[i].activity_id;        
+        activityLabel = logsJson.output.objects[i].activity_label;
+        activityType = logsJson.output.objects[i].type;
+        message = logsJson.output.objects[i].message;
+        actype = logsJson.output.objects[i].type;
+        actionDate = logsJson.output.objects[i].updated_at;
+
+        if(activityType=="input")message="##DATA##";
+        if(activityType=="output")message="##DATA##";
+        if(activityType=="bill"){
+            message="##DATA##";
+            activityId = "bill";
+        }
+        if(activityLabel=="Logger")message="##DATA##";
+        if(activityLabel===undefined)activityLabel=actype;
+        activityLabel = "\"" + activityLabel  + "\"";
+
+        activitId = "\"" + activityId + "\"";
+        
+        
+        csv += activityId + sep + activityLabel + sep + activityType + sep + message + sep + actionDate + sep;
+        if(i>0)
+        {
+            dbg.message("<EXPERIMENTAL>"+"CSV Conversion Calculating delta",4);
+            var dateObjPrev = new Date(prevDate);
+            var dateObjCurr = new Date(actionDate);
+            var res = dateObjCurr.getTime() - dateObjPrev.getTime();
+            csv += res;
+            
+        }
+        else
+        {
+            csv += 0;
+        }
+        csv += "\n";
+
+        prevDate = actionDate;
+    }
+    return csv;
+
+}
+
+function processVbidResponse(url,err,body,res){
+    if(res.statusCode==200)
+    {
+        if(body.output.objects)
+        {
+            dbg.message("<EXPERIMENTAL>"+"Found Logs for - VBID",4);
+            
+            var outputFormat = format.toUpperCase();
+
+            switch(outputFormat)
+            {
+
+                case "JSON":
+                    dbg.message("<EXPERIMENTAL>"+"Outputting in JSON Format",4);
+                    if(prettyprint==true){
+                        dbg.message(JSON.stringify(body,null,4),-1);
+                    }
+                    else{
+                        dbg.message((JSON.stringify(body)),-1);
+                    }  
+                    break;
+                case "CSV":
+                    dbg.message("<EXPERIMENTAL>"+"Outputting in CSV Format",4);
+                    var csv = logsToCSV(body);
+                    dbg.message(csv,-1);
+                    break;
+
+                default: 
+                    dbg.message("<EXPERIMENTAL>" + "Please provide a valid format - either JSON or CSV");
+                    break;
+            }
+            
+
+            
+        }
+        else{
+
+            dbg.message("<EXPERIMENTAL>"+ "Unable to find logs for VBID",1);
+        }
+    }
+    else
+    {
+        dbg.message("<EXPERIMENTAL>"+"Failed to get logs for VBID",1)
+        dbg.message(JSON.stringify(body),1);
+        process.exit(99);
+    }
+}
+
 
 function processSingleResubmissionResponse(url,err,body,res){
     if(res.statusCode==200)
@@ -872,6 +996,12 @@ function loginResponse(url,err,body,res){
     
 }
 
-module.exports = {init,user,stages,projectWorkflows,projectFlowservices,connectorAccounts,
-    getProjectAccountConfig,searchProject,getMonitorInfo,workflowResubmit,
-    projectDeployments,messagingCreate,messagingStats,messagingDelete};
+module.exports = {init,
+    user,stages,
+    searchProject,
+    projectDeployments,
+    projectWorkflows,projectFlowservices,
+    connectorAccounts,getProjectAccountConfig,
+    getMonitorInfo,workflowResubmit,
+    messagingCreate,messagingStats,messagingDelete,
+    vbidAnalysis};
