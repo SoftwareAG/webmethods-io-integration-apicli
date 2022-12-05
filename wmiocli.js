@@ -700,7 +700,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.messagingStats(projectId,name);
   });  
 
-  program.command('experimental-workflow-execution-analysis <vbid> <project-id> [format]',{hidden: hideExperimental})
+  program.command('experimental-workflow-execution-analysis <vbid> [format]',{hidden: hideExperimental})
   .description('Provide workflow exedcution analysis')
   .action((vbid,format) => {
     checkOptions();
