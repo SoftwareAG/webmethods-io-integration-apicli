@@ -16,6 +16,7 @@ var theme = require('./themes.js');
 var recipe = require('./recipe.js');
 var flowservice = require('./flowservice.js');
 var experimental = require('./experimental.js');
+var hideExperimental = true;
 const { setLogLevel } = require('./debug.js');
 
 
@@ -61,8 +62,7 @@ function checkOptions(){
 
   ignoreTLS = program.opts().ignoreTLSErrors;
 
-
-
+ 
   if(program.opts().prettyprint == true)
   {
     prettyprint = true;
@@ -154,6 +154,7 @@ program
   .option('--proxy <proxyURL>','URL for proxy server if required')
   .option('--caCert <path-to-cert>','Path to a CACert PEM file if required')
   .option('--ignoreTLSErrors','Ignore TLS errors')
+  .option('--experimental','Provide help information on experimental commands')
 
   
 //Additional help
@@ -594,7 +595,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
  * experimental non-public APIs
  * ------------------------------------------------------------------------------------------------------------------------------------
  */
-  program.command('experimental-user',{hidden: true})
+  program.command('experimental-user',{hidden: hideExperimental})
    .addHelpCommand("HELP")
    .description('Get User information')
    .action(() => {
@@ -603,7 +604,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
       experimental.user();
   });
 
-  program.command('experimental-stages',{hidden: true})
+  program.command('experimental-stages',{hidden: hideExperimental})
   .description('Get Stage information')
   .action(() => {
      checkOptions();
@@ -611,7 +612,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
      experimental.stages();
   });
 
-  program.command('experimental-project-workflows <project-id>',{hidden: true})
+  program.command('experimental-project-workflows <project-id>',{hidden: hideExperimental})
   .description('Get information about project workflows')
   .action((projectId) => {
       checkOptions();
@@ -619,7 +620,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
       experimental.projectWorkflows(projectId);
   });
 
-  program.command('experimental-project-flowservices <project-id>',{hidden: true})
+  program.command('experimental-project-flowservices <project-id>',{hidden: hideExperimental})
   .description('Get information about project FlowServices')
   .action((projectId) => {
     checkOptions();
@@ -627,7 +628,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.projectFlowservices(projectId);
   });
 
-  program.command('experimental-project-connector-accounts <project-id>',{hidden: true})
+  program.command('experimental-project-connector-accounts <project-id>',{hidden: hideExperimental})
   .description('Get Information about project connector accounts')
   .action((projectId) => {
     checkOptions();
@@ -635,7 +636,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.connectorAccounts(projectId);
   });
 
-  program.command('experimental-project-connector-account-wf-config <project-id>',{hidden: true})
+  program.command('experimental-project-connector-account-wf-config <project-id>',{hidden: hideExperimental})
   .description('Get configuration information about project connector accounts')
   .action((projectId) => {
     checkOptions();
@@ -643,7 +644,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.getProjectAccountConfig(projectId);
   });
 
-  program.command('experimental-project-search <project-name>',{hidden: true})
+  program.command('experimental-project-search <project-name>',{hidden: hideExperimental})
   .description('Search project info by name')
   .action((projectName) => {
     checkOptions();
@@ -651,7 +652,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.searchProject(projectName);
   });
 
-  program.command('experimental-project-deployments <project-id>',{hidden: true})
+  program.command('experimental-project-deployments <project-id>',{hidden: hideExperimental})
   .description('List all project deployments')
   .action((projectId) => {
     checkOptions();
@@ -659,7 +660,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.projectDeployments(projectId);
   });
 
-  program.command('experimental-workflow-monitor [execution-status] [start-date] [end-date] [project-id] [workflow-id]',{hidden: true})
+  program.command('experimental-workflow-monitor [execution-status] [start-date] [end-date] [project-id] [workflow-id]',{hidden: hideExperimental})
   .description('List Workflow Monitor')
   .action((executionStatus,startDate,endDate,projectId,workflowId) => {
     checkOptions();
@@ -667,7 +668,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.getMonitorInfo(executionStatus,startDate,endDate,projectId,workflowId);
   });
 
-  program.command('experimental-workflow-resubmit [restart-or-resume] [start-date] [end-date] [project-id] [workflow-id]',{hidden: true})
+  program.command('experimental-workflow-resubmit [restart-or-resume] [start-date] [end-date] [project-id] [workflow-id]',{hidden: hideExperimental})
   .description('Resubmit workflows from monitor')
   .action((restartOrResume,startDate,endDate,projectId,workflowId) => {
     checkOptions();
@@ -675,7 +676,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.workflowResubmit(restartOrResume, startDate, endDate, projectId,workflowId);
   });
   
-  program.command('experimental-messaging-create <queue-or-topic> <name> <project-id>',{hidden: true})
+  program.command('experimental-messaging-create <queue-or-topic> <name> <project-id>',{hidden: hideExperimental})
   .description('Create a messaging queue or topic')
   .action((queueOrTopc,name,projectId) => {
     checkOptions();
@@ -683,7 +684,7 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.messagingCreate(queueOrTopc,projectId,name);
   });
 
-  program.command('experimental-messaging-delete <queue-or-topic> <name> <project-id>',{hidden: true})
+  program.command('experimental-messaging-delete <queue-or-topic> <name> <project-id>',{hidden: hideExperimental})
   .description('Delete a messaging queue or topic')
   .action((queueOrTopc,name,projectId) => {
     checkOptions();
@@ -691,13 +692,21 @@ program.command('flowservice-execute <project-id> <flow-name> [input-json]')
     experimental.messagingDelete(queueOrTopc,projectId,name);
   });
 
-  program.command('experimental-messaging-stats <name> <project-id>',{hidden: true})
+  program.command('experimental-messaging-stats <name> <project-id>',{hidden: hideExperimental})
   .description('Get Messaging Stats')
   .action((name,projectId) => {
     checkOptions();
     experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
     experimental.messagingStats(projectId,name);
   });  
+
+  program.command('experimental-workflow-execution-analysis <vbid> [format]',{hidden: hideExperimental})
+  .description('Provide workflow exedcution analysis')
+  .action((vbid,format) => {
+    checkOptions();
+    experimental.init(tenantDomain,tenantUser,tenantPw,program.opts().timeout,program.opts().prettyprint)
+    experimental.vbidAnalysis(vbid,format);
+  })
   
 program.parse();
 
