@@ -336,7 +336,7 @@ function listTriggers(projectId) {
 
 function deleteTrigger(projectId,triggerId) {
     debug("Deete Triggers for ProjectId [" + projectId + "] with triggerID [" + triggerId + "]");
-    if (projectId) url += "/" + projectId + "/trigger-flows";
+    if (projectId) url += "/" + projectId + "/triggers";
     if(triggerId) url += "/" + triggerId;
     var data;
     request.httpDelete(url, username, password, timeout, data, processResponse);
