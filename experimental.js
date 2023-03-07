@@ -39,6 +39,8 @@ var payloaduid;
 var projectuid;
 var data;
 var type;
+var flowServiceId;
+var scheduleStatus;
 
 
 const maxRunningWorkflows = 20;
@@ -67,6 +69,28 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     dbg.message("<EXPERIMENTAL>Username [" + username + "]",4);
     dbg.message("<EXPERIMENTAL>URL      [" + url + "]",4);
     dbg.message("<EXPERIMENTAL>Timeout  [" + timeout + "]",4);
+}
+
+
+function flowserviceScheduler(inFlowServiceId, inScheduleStatus, inProjectId)
+{
+    flowServiceId = inFlowServiceId;
+    scheduleStatus = inScheduleStatus;
+    projectId = inProjectId;
+    finalCall = processScheduleStatus;
+    debug("******************Starting FlowService Scheduler");
+    loginPhase1();
+}
+
+function processScheduleStatus()
+{
+    debug("Process FlowService Schedule Status - Project [" + projectId + "] FlowService [" + flowServiceId + "] Status [" + scheduleStatus + "]");
+
+    var endPoint = "https://" +domainName + "/integration/rest/scheduler/"+ scheduleStatus +"/" + flowServiceId +"?projectName="+ projectId ;
+    debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    var body;
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,undefined,headers,true,false);  
 }
 
 function user()
@@ -236,6 +260,9 @@ function setHeaders()
         {name:"X-Requested-With",value:"XMLHttpRequest"},
         {name:"X-Request-ID",value:generateUUID()},
         {name:"project_uid",value:projectId},
+        {name:"x-csrf-token",value:csrf},
+        
+        
     ];
     return headers;
 }
@@ -664,7 +691,7 @@ function getLogs()
 function searchProjectsByName()
 {
     dbg.message("<EXPERIMENTAL>"+"Search Projects By Name [" + projectName + "]",4);
-    var endPoint = "https://" + domainName + "/enterprise/v1/projects?limit=1000&skip=0&q=" + projectName;
+    var endPoint = "https://" + domainName + "/enterprise/v1/projects?limit=" + returnCount+ "&skip=" + returnStart + "&q=" + projectName;
     dbg.message("<EXPERIMENTAL>"+"Next URL [" + endPoint + "]",4);
     var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);  
@@ -711,7 +738,10 @@ function projectWorkflowsInfo()
 {
 
     debug("Project Workflows Info");
-    var endPoint = "https://" + domainName + "/enterprise/v1/flows?limit=1000&skip=0&filter=recent&tags=&query=";
+    var endPoint = "https://" + domainName + "/enterprise/v1/flows?limit=" + returnCount+ "&skip=" + returnStart + "&filter=recent&tags=&query=";
+
+    
+
     debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processProjectsResponse,undefined,headers,true,false);   
@@ -721,7 +751,7 @@ function projectFlowServicesInfo()
 {
 
     debug("Project FlowServices Info");
-    var endPoint = "https://" + domainName + "/integration/rest/ut-flow/flow-metadata/" + projectId + "?skip=0&limit=1000";
+    var endPoint = "https://" + domainName + "/integration/rest/ut-flow/flow-metadata/" + projectId + "?limit=" + returnCount+ "&skip=" + returnStart;
     debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,undefined,headers,true,false);   
@@ -996,6 +1026,9 @@ function loginResponse(url,err,body,res){
     
 }
 
+
+
+
 module.exports = {init,
     user,stages,
     searchProject,
@@ -1004,4 +1037,4 @@ module.exports = {init,
     connectorAccounts,getProjectAccountConfig,
     getMonitorInfo,workflowResubmit,
     messagingCreate,messagingStats,messagingDelete,
-    vbidAnalysis};
+    vbidAnalysis, flowserviceScheduler};
