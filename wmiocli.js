@@ -753,8 +753,8 @@ program.command('experimental-workflow-execution-analysis <vbid> [format]', { hi
   })
 
 
-program.command('experimental-flowservice-scheduler <project-id> <flowservice-id> <schdeule-status>', { hidden: hideExperimental })
-  .description('Provide workflow exedcution analysis')
+program.command('experimental-flowservice-scheduler <project-id> <flowservice-id> <schedule-status>', { hidden: hideExperimental })
+  .description('Enable/Disable FlowService Schedules')
   .action((projectId, flowServiceId,scheduleStatus) => {
     checkOptions();
     //Valid status = pause or resume.
@@ -767,6 +767,45 @@ program.command('experimental-flowservice-scheduler <project-id> <flowservice-id
     experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
     experimental.flowserviceScheduler(flowServiceId,scheduleStatus,projectId);
   })
+
+program.command('experimental-flowservice-http <project-id> <flowservice-id> <enable>', { hidden: hideExperimental })
+  .description('Enable/Disable FlowService HTTP')
+  .action((projectId, flowServiceId,enable) => {
+    checkOptions();
+    //Valid status = pause or resume.
+    enable = enable.toLowerCase();
+    if(enable != "true" && enable !="false")
+    {
+      console.log("Enable should be set to one of either true or false. You provided: " + enable);
+      process.exit(1);
+    }
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.flowserviceOption(flowServiceId,enable,projectId,"http");
+  })
+
+  program.command('experimental-flowservice-resubmit <project-id> <flowservice-id> <enable>', { hidden: hideExperimental })
+  .description('Enable/Disable FlowService Resubmit')
+  .action((projectId, flowServiceId,enable) => {
+    checkOptions();
+    //Valid status = pause or resume.
+    enable = enable.toLowerCase();
+    if(enable != "true" && enable !="false")
+    {
+      console.log("Enable should be set to one of either true or false. You provided: " + enable);
+      process.exit(1);
+    }
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.flowserviceOption(flowServiceId,enable,projectId,"resubmit");
+  })
+
+  program.command('experimental-flowservice-details <project-id>', { hidden: hideExperimental })
+  .description('Get FlowService details from project')
+  .action((projectId) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.flowserviceDetails(projectId,"false");
+  })  
+
 program.parse();
 
 

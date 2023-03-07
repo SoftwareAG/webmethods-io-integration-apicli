@@ -41,6 +41,9 @@ var data;
 var type;
 var flowServiceId;
 var scheduleStatus;
+var optionEnable;
+var flowOptionType;
+var incEdgeFlows;
 
 
 const maxRunningWorkflows = 20;
@@ -72,20 +75,77 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
 }
 
 
+function flowserviceDetails(inProjectId,includeEdgeFlows)
+{
+    projectId = inProjectId;
+    incEdgeFlows = includeEdgeFlows
+    finalCall = processflowDetails;
+    loginPhase1();
+}
+
+function processflowDetails()
+{
+    debug("Process FlowService Details - Project [" + projectId + "] Include Edge flows [" + incEdgeFlows + "]");
+    var endPoint = "https://" +domainName + "/integration/rest/ut-flow/flow-metadata/" + projectId + "?limit=" + returnCount+ "&skip=" + returnStart;
+    var body;
+    debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"GET",processResponse,undefined,headers,true,false);  
+}
+
+function flowserviceOption(inFlowServiceId, inEnable, inProjectId,inOptionType)
+{
+    flowServiceId = inFlowServiceId;
+    optionEnable = inEnable;
+    projectId = inProjectId;
+    flowOptionType = inOptionType;
+    finalCall = processflowOption;
+    loginPhase1();
+}
+
+function processflowOption()
+{
+    debug("Process FlowService Option [" + flowOptionType + "] - Project [" + projectId + "] FlowService [" + flowServiceId + "] Enable [" + optionEnable + "]");
+    if(optionEnable!==undefined&&optionEnable!==null&optionEnable.length>1){
+        optionEnable = (optionEnable.toLowerCase()=="true");
+    }
+
+    var endPoint = "https://" +domainName + "/integration/rest/ut-flow/flow/";
+    var body={};
+    if(flowOptionType=="http")
+    {
+        endPoint+= "export/" + flowServiceId +"?projectName="+ projectId ;
+        body = {"integration":{"serviceData":{"stages":[{"stageName":"stage00","markExportable":optionEnable}]}}};
+    }
+    else if(flowOptionType=="resubmit")
+    {
+        endPoint+= "resubmit/" + flowServiceId +"?projectName="+ projectId ;
+        body = {"integration":{"serviceData":{"stages":[{"stageName":"stage00","markResubmittable":optionEnable}]}}};
+    }
+    else
+    {
+        console.log("Unable to determine flow option type: " + flowOptionType);
+        process.exit(1);
+    }
+
+    debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"PUT",processResponse,undefined,headers,true,false);  
+}
+
+
 function flowserviceScheduler(inFlowServiceId, inScheduleStatus, inProjectId)
 {
     flowServiceId = inFlowServiceId;
     scheduleStatus = inScheduleStatus;
     projectId = inProjectId;
     finalCall = processScheduleStatus;
-    debug("******************Starting FlowService Scheduler");
     loginPhase1();
 }
 
 function processScheduleStatus()
 {
     debug("Process FlowService Schedule Status - Project [" + projectId + "] FlowService [" + flowServiceId + "] Status [" + scheduleStatus + "]");
-
     var endPoint = "https://" +domainName + "/integration/rest/scheduler/"+ scheduleStatus +"/" + flowServiceId +"?projectName="+ projectId ;
     debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
@@ -1037,4 +1097,4 @@ module.exports = {init,
     connectorAccounts,getProjectAccountConfig,
     getMonitorInfo,workflowResubmit,
     messagingCreate,messagingStats,messagingDelete,
-    vbidAnalysis, flowserviceScheduler};
+    vbidAnalysis, flowserviceScheduler,flowserviceOption,flowserviceDetails};
