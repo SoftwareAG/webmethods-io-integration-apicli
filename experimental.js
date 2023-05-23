@@ -146,6 +146,7 @@ function flowserviceScheduler(inFlowServiceId, inScheduleStatus, inProjectId)
 function processScheduleStatus()
 {
     debug("Process FlowService Schedule Status - Project [" + projectId + "] FlowService [" + flowServiceId + "] Status [" + scheduleStatus + "]");
+
     var endPoint = "https://" +domainName + "/integration/rest/scheduler/"+ scheduleStatus +"/" + flowServiceId +"?projectName="+ projectId ;
     debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();

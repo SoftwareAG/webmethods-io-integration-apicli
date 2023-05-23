@@ -477,7 +477,7 @@ program.command('workflow-status <project-id> <run-id>')
   .description('Gets Execution status for workflow execution <run-id>')
   .action((projectId, runId) => {
     checkOptions();
-    wf.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, projectId);
+    wf.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint, projectId);
     wf.statuswf(runId);
   });
 
@@ -485,7 +485,7 @@ program.command('workflow-create <project-id> <worfklow-name> <workflow-descript
   .description('Creates a blank workflow with the given name/description')
   .action((projectId, workflowName, workflowDescription) => {
     checkOptions();
-    wf.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, projectId);
+    wf.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint, projectId);
     wf.createwf(workflowName, workflowDescription);
   });
 
