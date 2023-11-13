@@ -157,6 +157,26 @@ $ node wmiocli.js
     -u user 
     -p password 
     project-triggers-delete project-uid trigger-uid
+
+\x1b[32mList Reference Data List:\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    referencedata project_name
+    e.g.
+    project-ref-data project-uid
+
+\x1b[32mList Reference Data List:\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    referencedata project_name ref-data-name <json/csv>
+
+    e.g.
+    project-ref-data project-uid ref-data-name json  
+    project-ref-data project-uid ref-data-name csv
 `;
 }
 function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyprint) {
@@ -189,6 +209,32 @@ function processResponse(data, status) {
         process.exit(status);
     }
 }
+
+/* reference data */
+function listRefData(projectId){
+    debug("List Reference Data - Project [" + projectId + "]");
+    url += "/" + projectId + "/referencedata";
+    request.get(url, username, password, timeout, processResponse);
+}
+
+function getRefData(projectId,refDataName,format){
+    debug("Getting Reference Data - Project [" + projectId + "] name [" + refDataName + "] format [" + format + "]");
+    url += "/" + projectId + "/referencedata + "/ + refDataName;
+    if(format && format.toLowerCase()=="csv")request.getPlain(url, username, password, timeout, processResponse);
+    else request.get(url, username, password, timeout, processResponse);
+}
+
+function addRefData(projectId,name,description,filename,encoding,separator,qualifier){
+    debug("Adding Reference Data to project [" + projectId + "]");
+    var body={};
+    body.name = name;
+    body.description = description;
+    //file
+    body.file_encoding = encoding;
+    body.field_separator = separator;
+    body.text_qualifier=qualifier;
+}
+
 
 /* Projects */
 function list(projectId) {
@@ -349,5 +395,6 @@ module.exports = {
     listAssets, listAssetsDetailed, pub, deploy,
     createParam, updateParam, listParam, deleteParam,
     listWebhooks, regenWebhook, setWebhookAuth,
-    listTriggers, deleteTrigger
+    listTriggers, deleteTrigger,
+    listRefData, getRefData
 };
