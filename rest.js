@@ -61,7 +61,17 @@ function requestModifiers(options){
     setignoreTLS(options);
 }
 
+
+function getPlain(restEndPoint,user,pass,timeout,callback)
+{
+    get(restEndPoint,user,pass,timeout,callback,"text/plain") 
+}
+
 function get(restEndPoint,user,pass,timeout,callback)
+{
+    get(restEndPoint,user,pass,timeout,callback,"application/json") 
+}
+function get(restEndPoint,user,pass,timeout,callback,accept)
 {
     debug("GET:" + restEndPoint);
     var options = {
@@ -71,7 +81,7 @@ function get(restEndPoint,user,pass,timeout,callback)
         timeout: timeout*1000,
         headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': accept
         },
         auth: {
             username: user,
@@ -425,4 +435,4 @@ function custom(restEndPoint,user,pass,timeout,jsonBody,formBody,type,callback,c
     });
 }
 
-module.exports = { get, post, put, del, postDownloadFile, postUploadFile, downloadFile, httpDelete, custom, addCookieToJar, displayCookies };
+module.exports = { get, getPlain, post, put, del, postDownloadFile, postUploadFile, downloadFile, httpDelete, custom, addCookieToJar, displayCookies };

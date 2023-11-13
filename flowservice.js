@@ -58,7 +58,7 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyPrint,proje
     timeout = inTimeout;
     prettyprint = inPrettyPrint;
 
-    url = "https://" + domainName + "/enterprise/v1/rest/projects/" + projectId ;
+    url = "https://" + domainName + "/apis/v1/rest/projects/" + projectId ;
     debug("Username [" + username + "]");
     debug("URL      [" + url + "]");
     debug("Timeout  [" + timeout + "]");
