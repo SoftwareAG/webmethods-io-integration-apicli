@@ -167,17 +167,39 @@ $ node wmiocli.js
     e.g.
     project-ref-data project-uid
 
-\x1b[32mList Reference Data List:\x1b[0m
+\x1b[32mList Reference Data Get Item:\x1b[0m
 $ node wmiocli.js 
     -d tenant.int-aws-us.webmethods.io 
     -u user 
     -p password 
-    referencedata project_name ref-data-name <json/csv>
+    project-ref-data project-uid ref-data-name <json/csv>
 
     e.g.
+    project-ref-data project-uid ref-data-name
     project-ref-data project-uid ref-data-name json  
     project-ref-data project-uid ref-data-name csv
+
+\x1b[32mAdd Reference Data:\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-ref-data-add project-uid name description filepath <field separator> <text_qualifier> <file_encoding>
+    
+    e.g.
+    project-ref-data-add flf1111 reflookup description test.csv
+
+\x1b[32mUpdate Reference Data:\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-ref-data-add project-uid name description filepath <field separator> <text_qualifier> <file_encoding>
+    
+    e.g.
+    project-ref-data-update flf1111 reflookup description test.csv
 `;
+
 }
 function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyprint) {
     domainName = inDomainName;
@@ -219,20 +241,42 @@ function listRefData(projectId){
 
 function getRefData(projectId,refDataName,format){
     debug("Getting Reference Data - Project [" + projectId + "] name [" + refDataName + "] format [" + format + "]");
-    url += "/" + projectId + "/referencedata + "/ + refDataName;
+    url += "/" + projectId + "/referencedata/" + refDataName;
+    debug("URL is: " + url);
     if(format && format.toLowerCase()=="csv")request.getPlain(url, username, password, timeout, processResponse);
     else request.get(url, username, password, timeout, processResponse);
 }
 
-function addRefData(projectId,name,description,filename,encoding,separator,qualifier){
+function addRefData(projectId,name,description,filename,separator,qualifier,encoding){
     debug("Adding Reference Data to project [" + projectId + "]");
-    var body={};
-    body.name = name;
-    body.description = description;
-    //file
-    body.file_encoding = encoding;
-    body.field_separator = separator;
-    body.text_qualifier=qualifier;
+    debug(`Fields: ${projectId},${name},${description},${filename},${separator},${qualifier},${encoding}`);
+    url += "/" + projectId + "/referencedata";
+
+    var data={};
+    data.name = name;
+    data.description = description;
+    data.file = filename;
+    data.file_encoding = encoding;
+    data.field_separator = separator;
+    data.text_qualifier = qualifier;
+
+    request.uploadFileFormData(url,username,password,timeout,data,filename,processResponse,"POST");
+}
+
+function updateRefData(projectId,name,description,filename,separator,qualifier,encoding){
+    debug("Adding Reference Data to project [" + projectId + "]");
+    debug(`Fields: ${projectId},${name},${description},${filename},${separator},${qualifier},${encoding}`);
+    url += "/" + projectId + "/referencedata/" + name;
+
+    var data={};
+    data.name = name;
+    data.description = description;
+    data.file = filename;
+    data.file_encoding = encoding;
+    data.field_separator = separator;
+    data.text_qualifier = qualifier;
+
+    request.uploadFileFormData(url,username,password,timeout,data,filename,processResponse,"PUT");
 }
 
 
@@ -331,6 +375,13 @@ function setWebhookAuth(projectId, workflowUid, authType) {
     request.post(url, username, password, timeout, data, processResponse);
 }
 
+function exportProj(projectId){
+    debug("Exporting Project [" + projectId + "]");
+    url += "/" + projectId + "/export";
+    data = undefined;
+    request.post(url, username, password, timeout, data, processResponse);
+}
+
 
 /* Deployment */
 
@@ -396,5 +447,6 @@ module.exports = {
     createParam, updateParam, listParam, deleteParam,
     listWebhooks, regenWebhook, setWebhookAuth,
     listTriggers, deleteTrigger,
-    listRefData, getRefData
+    listRefData, getRefData, addRefData, updateRefData,
+    exportProj
 };

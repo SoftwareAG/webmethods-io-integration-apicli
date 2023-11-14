@@ -368,6 +368,55 @@ program.command('project-triggers-delete <project-id> <trigger-id>')
     project.deleteTrigger(projectId, triggerId);
   });
 
+  program.command('project-ref-data <project-id> [ref-data-name]')
+  .description('lists/gets reference data in a project')
+  .action((projectId, refDataName) => {
+    checkOptions();
+    //console.log(refDataName);
+    project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    if(refDataName===undefined || refDataName===null || refDataName.length==0)
+    {
+      project.listRefData(projectId);
+    }
+    else
+    {
+      project.getRefData(projectId,refDataName);
+    }
+  });
+
+  program.command('project-ref-data-add <project-id> <ref-data-name> <ref-data-description> <filename> [field-separator] [text-qualifier] [file-encoding]')
+  .description('Adds reference data')
+  .action((projectId, refDataName,refDataDescription,filename,fieldSeparator,textQualifier,fileEncoding) => {
+    checkOptions();
+    if(fileEncoding===undefined || fileEncoding===null || fileEncoding.length==0){fileEncoding="UTF-8"};
+    if(fieldSeparator===undefined || fieldSeparator===null || fieldSeparator.length==0){fieldSeparator=","};
+    if(textQualifier===undefined || textQualifier===null || textQualifier.length==0){textQualifier='"'};
+    
+    project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    project.addRefData(projectId,refDataName,refDataDescription,filename,fieldSeparator,textQualifier,fileEncoding);
+
+  });
+  
+  program.command('project-ref-data-update <project-id> <ref-data-name> <ref-data-description> <filename> [field-separator] [text-qualifier] [file-encoding]')
+  .description('Updates reference data')
+  .action((projectId, refDataName,refDataDescription,filename,fieldSeparator,textQualifier,fileEncoding) => {
+    checkOptions();
+    if(fileEncoding===undefined || fileEncoding===null || fileEncoding.length==0){fileEncoding="UTF-8"};
+    if(fieldSeparator===undefined || fieldSeparator===null || fieldSeparator.length==0){fieldSeparator=","};
+    if(textQualifier===undefined || textQualifier===null || textQualifier.length==0){textQualifier='"'};
+    
+    project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    project.updateRefData(projectId,refDataName,refDataDescription,filename,fieldSeparator,textQualifier,fileEncoding);
+  });
+
+
+  program.command('project-export <project-id>')
+  .description('Exports a project')
+  .action((projectId) => {
+    checkOptions();
+    project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    project.exportProj(projectId);
+  });
 
 /**
  * ------------------------------------------------------------------------------------------------------------------------------------
