@@ -167,6 +167,55 @@ function sendBody(restEndPoint,user,pass,timeout,data,type,callback){
 }
 
 
+function uploadFileFormData(restEndPoint,user,pass,timeout,data,filename,callback,method){
+    debug("postUploadFile Filename ["+ filename + "] to: " + restEndPoint);
+    var options = {
+        url: restEndPoint,
+        json: true,
+        method: method,
+        timeout: timeout*1000,
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json'
+        },
+        formData : {
+            'file' : fs.createReadStream(filename),
+            'name' : data.name,
+            'description' : data.description,
+            'file_encoding' : data.file_encoding,
+            'field_separator' : data.field_separator,
+            'text_qualifier': data.text_qualifier
+        },
+        auth: {
+            username: user,
+            password: pass
+        },
+    };
+    requestModifiers(options);
+    debug(JSON.stringify(options));
+
+    request(options, (err, res, body) => {
+        if(body)debug("BODY:" + JSON.stringify(body));
+        if(err)debug("ERR:" + JSON.stringify(err));
+        if(res)debug("RES:" + JSON.stringify(res));
+        
+        if(res && res.statusCode != 200){ 
+            return callback(body,99)
+        }
+        
+        if (err) {
+            return callback(err,99)
+        }
+        if (body){
+            return callback(body,0)
+        }
+        else{
+            var error="unknown";
+            return callback(error,98);
+        }
+    });
+}
+
 function postUploadFile(restEndPoint,user,pass,timeout,data,filename,callback){
     debug("postUploadFile Filename ["+ filename + "] to: " + restEndPoint);
     var options = {
@@ -435,4 +484,4 @@ function custom(restEndPoint,user,pass,timeout,jsonBody,formBody,type,callback,c
     });
 }
 
-module.exports = { get, getPlain, post, put, del, postDownloadFile, postUploadFile, downloadFile, httpDelete, custom, addCookieToJar, displayCookies };
+module.exports = { get, getPlain, post, put, del, postDownloadFile, postUploadFile,uploadFileFormData, downloadFile, httpDelete, custom, addCookieToJar, displayCookies };
