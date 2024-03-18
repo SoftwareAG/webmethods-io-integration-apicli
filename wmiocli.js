@@ -793,6 +793,14 @@ program.command('experimental-messaging-stats <name> <project-id>', { hidden: hi
     experimental.messagingStats(projectId, name);
   });
 
+program.command('experimental-messaging-subscriber <subscriber-name> <subscriber-status> <project-id>', { hidden: hideExperimental })
+  .description('Set Subscriber Status')
+  .action((subscriberName, subscriberStatus, projectId) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.messagingSubscriber(projectId, subscriberName, subscriberStatus);
+  });
+
 program.command('experimental-workflow-execution-analysis <vbid> [format]', { hidden: hideExperimental })
   .description('Provide workflow exedcution analysis')
   .action((vbid, format) => {

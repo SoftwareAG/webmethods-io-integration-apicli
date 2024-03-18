@@ -29,6 +29,8 @@ var endDate;
 var startOrResume;
 var queueOrTopic;
 var messagingName;
+var subscriberName;
+var subscriberState;
 var nextUrl,formUrl;
 var finalCall;
 var loginStageCounter = 0;
@@ -218,6 +220,23 @@ function getMonitorInfo(inExecutionStatus,inStartDate,inEndDate,inProjectId,inWo
     endDate = inEndDate;
     finalCall = getLogs;
     loginPhase1();
+}
+
+function messagingSubscriberEnable(inProjectId,inSubscriberName){
+    messagingSubscriber(inProjectId,inSubscriberName,"ENABLED")
+}
+
+function messagingSubscriberDisable(inProjectId,inSubscriberName){
+    messagingSubscriber(inProjectId,inSubscriberName,"DISABLED")
+}
+
+function messagingSubscriber(inProjectId,inSubscriberName,state){
+    debug("Starting subscriber state change");
+    projectId = inProjectId;
+    subscriberName = inSubscriberName;
+    subscriberState = state;
+    finalCall = processSubscriberState;
+    loginPhase1(); 
 }
 
 function messagingDelete(inQueueOrTopic, inProjectId,inMessagingName)
@@ -714,6 +733,15 @@ function doMessagingCreate()
     rest.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,undefined,headers,true,false);  
 }
 
+function processSubscriberState()
+{
+    debug("Messaging Subscriber State Change: " + subscriberState);
+    var endPoint = "https://" +domainName + "/integration/rest/messaging/subscribers/" + subscriberName + "?projectName=" + projectId + "&prop=state&value=" + subscriberState + "&force=false";
+    debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    rest.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"PATCH",processResponse,undefined,headers,true,false);  
+}
+
 function doMessagingDelete()
 {
     debug("Messaging Item Deletion")
@@ -1097,5 +1125,5 @@ module.exports = {init,
     projectWorkflows,projectFlowservices,
     connectorAccounts,getProjectAccountConfig,
     getMonitorInfo,workflowResubmit,
-    messagingCreate,messagingStats,messagingDelete,
+    messagingCreate,messagingStats,messagingDelete, messagingSubscriber,
     vbidAnalysis, flowserviceScheduler,flowserviceOption,flowserviceDetails};
