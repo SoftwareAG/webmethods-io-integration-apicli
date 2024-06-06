@@ -5,7 +5,7 @@
  * [users.js] Users APIs
  */
 
-const request = require('./rest.js');
+const request = require('./rest-fetch.js');
 
 var domainName, username,password,timeout;
 var prettyprint;
@@ -40,7 +40,8 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
  * @param {return data from REST request} data 
  * @param {status} status 
  */
- function processResponse(data,status){
+function processResponse(restEndPointUrl, err, data, response) {
+    let status = response.status;
     if(prettyprint==true){
         console.log(JSON.stringify(data,null,4));
     }
@@ -86,7 +87,7 @@ function assignRoles(userid, roles){
     debug("URL is [" + url + "]");
     roles = roles.split(",");
     data={"username":userid,roles};
-    console.log(data);
+    //console.log(data);
     request.put(url,username,password,timeout,data,processResponse);
 }
 

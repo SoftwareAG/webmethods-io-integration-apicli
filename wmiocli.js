@@ -16,12 +16,12 @@ var theme = require('./themes.js');
 var recipe = require('./recipe.js');
 var flowservice = require('./flowservice.js');
 var monitor = require('./monitor.js');
+var idm = require('./idm.js');
 var experimental = require('./experimental.js');
 var hideExperimental = true;
 returnStart = 0;
 returnCount = 1000;
 const { setLogLevel } = require('./debug.js');
-
 
 dbg = require('./debug.js');
 prettyprint = false;
@@ -53,6 +53,7 @@ function checkOptions() {
     proxy = program.opts().proxy;
     debug("Using Proxy: " + proxy);
   }
+  
   if (program.opts().caCert !== undefined) {
     caCertFile = program.opts().caCert;
     debug("Using CA Cert File: " + caCertFile);
@@ -204,6 +205,7 @@ $ node wmiocli.js --help
     + recipe.help()
     + theme.help()
     + monitor.help()
+    + idm.help()
   )
 
 
@@ -368,7 +370,7 @@ program.command('project-triggers-delete <project-id> <trigger-id>')
     project.deleteTrigger(projectId, triggerId);
   });
 
-  program.command('project-ref-data <project-id> [ref-data-name]')
+  program.command('project-ref-data <project-id> [ref-data-name]') //[format]
   .description('lists/gets reference data in a project')
   .action((projectId, refDataName) => {
     checkOptions();
@@ -380,7 +382,7 @@ program.command('project-triggers-delete <project-id> <trigger-id>')
     }
     else
     {
-      project.getRefData(projectId,refDataName);
+      project.getRefData(projectId,refDataName,"");
     }
   });
 
@@ -408,6 +410,16 @@ program.command('project-triggers-delete <project-id> <trigger-id>')
     project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
     project.updateRefData(projectId,refDataName,refDataDescription,filename,fieldSeparator,textQualifier,fileEncoding);
   });
+
+  program.command('project-ref-data-delete <project-id> <ref-data-name>')
+  .description('Updates reference data')
+  .action((projectId, refDataName,refDataDescription,filename,fieldSeparator,textQualifier,fileEncoding) => {
+    checkOptions();
+    
+    project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    project.deleteRefData(projectId,refDataName);
+  });
+
 
 
   program.command('project-export <project-id>')
@@ -670,8 +682,8 @@ program.command('recipe-create <filename>')
     checkOptions();
     debug("Monitor Summary");
     debug("***************** startdate:" + startDate);
-    monitor.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
-    monitor.list(startDate,endDate,projectsList,workflowsList,executionStatus,from,count)
+    monitor.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+    monitor.list(startDate,endDate,projectsList,workflowsList,executionStatus,from,count);
   });
 
   program.command('monitor-workflow-log <bill-uid>')
@@ -682,6 +694,114 @@ program.command('recipe-create <filename>')
     monitor.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
     monitor.logDetail(billUid);
   });
+
+
+/**
+* ------------------------------------------------------------------------------------------------------------------------------------
+* IDM APIs
+* ------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+program.command('idm-authtoken')
+  .description('Get authtoken from IDM')
+  .action((username) => {
+    checkOptions();
+    idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+    idm.authToken(username);
+  });
+
+program.command('idm-user <username>')
+  .description('Get User information direct from IDM')
+  .action((username) => {
+    checkOptions();
+    idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+    idm.getUserInfo(username);
+  });
+
+program.command('idm-user-search <query> <includeRoles> <products>')
+  .description('Searches user information from the IDM')
+  .action((query,includeRoles,products) => {
+    checkOptions();
+    idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+    idm.searchUserInfo(query,includeRoles,products);
+});
+
+program.command('idm-user-count [query]')
+  .description('Counts users matching a provided query')
+  .action((query) => {
+    checkOptions();
+    idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+    idm.countUsers(query);
+});
+
+program.command('idm-user-role-mappings <userid>')
+  .description('Finds role mappings for given user')
+  .action((userid) => {
+    checkOptions();
+    idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+    idm.roleMappings(userid);
+});
+
+program.command('idm-roles')
+  .description('Lists all assignable roles for the current environment')
+  .action((userid) => {
+    checkOptions();
+    idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+    idm.allRoles();
+});
+
+program.command('idm-user-create <first-name> <last-name> <email> <username>')
+  .description('Creates a new user in the IDM')
+  .action(async (firstName,lastName,email,username) => {
+    checkOptions();
+    try {
+      await idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+      idm.createUser(firstName, lastName, email, username);
+    } 
+    catch (error) {
+      console.error("Error:", error);
+    }
+});
+
+// program.command('idm-user-resetpassword <user-id> <new-password>')
+//   .description('Resets a users password')
+//   .action(async (userId,newPassword) => {
+//     checkOptions();
+//     try {
+//       await idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+//       idm.resetPassword(userId,newPassword);
+//     } 
+//     catch (error) {
+//       console.error("Error:", error);
+//     }
+// });
+
+program.command('idm-user-delete <user-id>')
+  .description('Deletes a user')
+  .action(async (userId) => {
+    checkOptions();
+    try {
+      await idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+      idm.deleteUser(userId);
+    } 
+    catch (error) {
+      console.error("Error:", error);
+    }
+});
+
+program.command('idm-user-unlock <user-id>')
+  .description('Unlocks a user')
+  .action(async (userId) => {
+    checkOptions();
+    try {
+      await idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+      idm.unlockUser(userId);
+    } 
+    catch (error) {
+      console.error("Error:", error);
+    }
+});
+
 
 /**
 * ------------------------------------------------------------------------------------------------------------------------------------
@@ -840,8 +960,8 @@ program.command('experimental-flowservice-http <project-id> <flowservice-id> <en
     experimental.flowserviceOption(flowServiceId,enable,projectId,"http");
   })
 
-  program.command('experimental-flowservice-resubmit <project-id> <flowservice-id> <enable>', { hidden: hideExperimental })
-  .description('Enable/Disable FlowService Resubmit')
+  program.command('experimental-flowservice-resume <project-id> <flowservice-id> <enable>', { hidden: hideExperimental })
+  .description('Enable/Disable FlowService Resume')
   .action((projectId, flowServiceId,enable) => {
     checkOptions();
     //Valid status = pause or resume.
@@ -852,8 +972,23 @@ program.command('experimental-flowservice-http <project-id> <flowservice-id> <en
       process.exit(1);
     }
     experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
-    experimental.flowserviceOption(flowServiceId,enable,projectId,"resubmit");
+    experimental.flowserviceOption(flowServiceId,enable,projectId,"resume");
   })
+
+  program.command('experimental-flowservice-restart <project-id> <flowservice-id> <enable>', { hidden: hideExperimental })
+  .description('Enable/Disable FlowService Restart')
+  .action((projectId, flowServiceId,enable) => {
+    checkOptions();
+    //Valid status = pause or resume.
+    enable = enable.toLowerCase();
+    if(enable != "true" && enable !="false")
+    {
+      console.log("Enable should be set to one of either true or false. You provided: " + enable);
+      process.exit(1);
+    }
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.flowserviceOption(flowServiceId,enable,projectId,"restart");
+  })  
 
   program.command('experimental-flowservice-details <project-id>', { hidden: hideExperimental })
   .description('Get FlowService details from project')

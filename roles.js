@@ -5,7 +5,7 @@
  * [roles.js] Project Roles APIs
  */
 
-const request = require('./rest.js');
+const request = require('./rest-fetch.js');
 
 var domainName, username, password, timeout;
 var prettyprint;
@@ -74,7 +74,8 @@ function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyprint) {
  * @param {return data from REST request} data 
  * @param {status} status 
  */
-function processResponse(data, status) {
+function processResponse(restEndPointUrl, err, data, response) {
+    let status = response.status;
     if (prettyprint == true) {
         console.log(JSON.stringify(data, null, 4));
     }
@@ -96,7 +97,7 @@ function list(roleId) {
 }
 
 function parseRoleListInput(rolesList) {
-    debug("Parsing role List [" + rolesLists + "]");
+    debug("Parsing role List [" + rolesList + "]");
     var arr = rolesList.split(";");
     var jsonStr = '[';
     for (var rolesCount = 0; rolesCount < arr.length; rolesCount++) {

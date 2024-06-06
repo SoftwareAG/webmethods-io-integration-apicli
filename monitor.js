@@ -4,7 +4,7 @@
  * Apache-2.0
  */
 
-const request = require('./rest.js');
+const request = require('./rest-fetch.js');
 
 
 var domainName, username, password, timeout;
@@ -58,7 +58,8 @@ function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyprint) {
  * @param {return data from REST request} data 
  * @param {status} status 
  */
-function processResponse(data, status) {
+function processResponse(restEndPointUrl, err, data, response) {
+    let status = response.status;
     if (prettyprint == true) {
         console.log(JSON.stringify(data, null, 4));
     }

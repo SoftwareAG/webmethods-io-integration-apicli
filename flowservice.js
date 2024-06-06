@@ -4,7 +4,7 @@
  * Apache-2.0
  */
 
-const rest = require('./rest.js');
+const rest = require('./rest-fetch.js');
 const dbg = require('./debug.js');
 
 
@@ -69,7 +69,8 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyPrint,proje
  * @param {return data from REST request} data 
  * @param {status} status 
  */
- function processResponse(data,status){
+function processResponse(restEndPointUrl, err, data, response) {
+    let status = response.status;
     if(prettyprint==true){
         console.log(JSON.stringify(data,null,4));
     }
@@ -82,14 +83,15 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyPrint,proje
     }
 }
 
-function downloadExport(data,status,filename){
+function downloadExport(restEndPointUrl, err, data, response,filename){
+    let status = response.status
     debug("Downloading Export");
-    if(status!=0){
+    if(status!=200){
         console.log(JSON.stringify(data));
         process.exit(status);
     }
     else{
-        rest.downloadFile(data,filename,downloadCompleted);
+        rest.downloadFile(data, filename, downloadCompleted);
     }
 }
 
@@ -117,7 +119,7 @@ function exportFlowService(flowId, filename){
 function importFlowService(filename){
     debug("Importing FlowService");
     url+="/flow-import";
-    rest.postUploadFile(url,username,password,timeout,undefined,filename,processResponse);
+    rest.postUploadFile(url,username,password,timeout,undefined,filename,"recipe",processResponse);
 }
 
 function runFlowService(flowId,data){

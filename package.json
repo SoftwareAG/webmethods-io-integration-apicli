@@ -6,7 +6,7 @@
     "wmiocli": "./wmiocli.js"
   },
   "scripts": {
-    "test": "wmiocli --help"
+    "test": "./EndtoEndTests.sh"
   },
   "repository": {
     "type": "git",
@@ -15,8 +15,6 @@
   "keywords": [
     "webMethods.io",
     "Integration",
-    "Software",
-    "AG",
     "wmiocli"
   ],
   "author": "Dave Pemberton",
@@ -26,10 +24,13 @@
   },
   "homepage": "https://github.com/dpembo/wmiocli#readme",
   "devDependencies": {
-    "commander": "^8.3.0",
-    "request": "^2.88.2"
+    "commander": "^8.3.0"
   },
   "dependencies": {
-    "readline-sync": "^1.4.10"
+    "formdata-node": "^6.0.3",
+    "https-proxy-agent": "^7.0.4",
+    "node-fetch": "^3.3.2",
+    "readline-sync": "^1.4.10",
+    "tough-cookie": "^4.1.4"
   }
 }

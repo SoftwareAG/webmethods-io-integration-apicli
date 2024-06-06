@@ -4,7 +4,7 @@
  * Apache-2.0
  */
 
-const request = require('./rest.js');
+const request = require('./rest-fetch.js');
 
 
 var domainName, username, password, timeout;
@@ -219,7 +219,8 @@ function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyprint) {
  * @param {return data from REST request} data 
  * @param {status} status 
  */
-function processResponse(data, status) {
+function processResponse(restEndPointUrl, err, data, response) {
+    let status = response.status;
     if (prettyprint == true) {
         console.log(JSON.stringify(data, null, 4));
     }
@@ -227,7 +228,7 @@ function processResponse(data, status) {
         console.log(JSON.stringify(data));
     }
 
-    if (status != 0) {
+    if (status != 200) {
         process.exit(status);
     }
 }
@@ -247,6 +248,13 @@ function getRefData(projectId,refDataName,format){
     else request.get(url, username, password, timeout, processResponse);
 }
 
+function deleteRefData(projectId,refDataName){
+    debug("Deleting Reference Data - Project [" + projectId + "] name [" + refDataName + "]");
+    url += "/" + projectId + "/referencedata/" + refDataName;
+    debug("URL is: " + url);
+    request.del(url, username, password, timeout,undefined, processResponse);
+}
+
 function addRefData(projectId,name,description,filename,separator,qualifier,encoding){
     debug("Adding Reference Data to project [" + projectId + "]");
     debug(`Fields: ${projectId},${name},${description},${filename},${separator},${qualifier},${encoding}`);
@@ -260,7 +268,16 @@ function addRefData(projectId,name,description,filename,separator,qualifier,enco
     data.field_separator = separator;
     data.text_qualifier = qualifier;
 
-    request.uploadFileFormData(url,username,password,timeout,data,filename,processResponse,"POST");
+    // var formdata=[];
+    // formdata.push({"name":data.name});
+    // formdata.push({"description":data.descript`ion});
+    // formdata.push({"encoding":data.encoding});
+    // formdata.push({"separator":data.separator});
+    // formdata.push({"text_qualifier":data.qualifier});
+
+    //request.uploadFileFormData(url,username,password,timeout,data,filename,processResponse,"POST");
+
+    request.postUploadFile(url,username,password,timeout,data,filename,"file", processResponse);
 }
 
 function updateRefData(projectId,name,description,filename,separator,qualifier,encoding){
@@ -276,7 +293,7 @@ function updateRefData(projectId,name,description,filename,separator,qualifier,e
     data.field_separator = separator;
     data.text_qualifier = qualifier;
 
-    request.uploadFileFormData(url,username,password,timeout,data,filename,processResponse,"PUT");
+    request.postUploadFile(url,username,password,timeout,data,filename,"file", processResponse,"PUT");
 }
 
 
@@ -447,6 +464,6 @@ module.exports = {
     createParam, updateParam, listParam, deleteParam,
     listWebhooks, regenWebhook, setWebhookAuth,
     listTriggers, deleteTrigger,
-    listRefData, getRefData, addRefData, updateRefData,
+    listRefData, getRefData, addRefData, updateRefData, deleteRefData,
     exportProj
 };

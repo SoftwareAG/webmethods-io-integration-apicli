@@ -38,7 +38,7 @@ function enableProxy(options){
 }
 
 function enableCACert(options){
-    if(proxy)
+    if(caCertFile)
     {
         debug("Enabling CACert");
         options.agentOptions={};

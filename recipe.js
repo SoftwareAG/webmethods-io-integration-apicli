@@ -4,7 +4,7 @@
  * Apache-2.0
  */
 
-const rest = require('./rest.js');
+const rest = require('./rest-fetch.js');
 
 var domainName, username, password, timeout, prettyprint;
 var url;
@@ -58,7 +58,8 @@ function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyPrint) {
  * @param {return data from REST request} data 
  * @param {status} status 
  */
-function processResponse(data, status) {
+function processResponse(restEndPointUrl, err, data, response) {
+    let status = response.status;
     if (prettyprint == true) {
         console.log(JSON.stringify(data, null, 4));
     }
@@ -66,14 +67,14 @@ function processResponse(data, status) {
         console.log(JSON.stringify(data));
     }
 
-    if (status != 0) {
+    if (status != 200) {
         process.exit(status);
     }
 }
 
 function create(filename) {
     debug("Creating Recipe from file [" + filename + "]");
-    rest.postUploadFile(url, username, password, timeout, undefined, filename, processResponse);
+    rest.postUploadFile(url, username, password, timeout, undefined, filename,"recipe", processResponse);
 }
 
 function list(recipeUid) {

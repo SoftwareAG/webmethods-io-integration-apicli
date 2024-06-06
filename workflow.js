@@ -4,7 +4,7 @@
  * Apache-2.0
  */
 
-const rest = require('./rest.js');
+const rest = require('./rest-fetch.js');
 
 var domainName, username, password, timeout, prettyprint;
 var url;
@@ -80,7 +80,14 @@ function init(inDomainName, inUsername, inPassword, inTimeout, inPrettyPrint, pr
  * @param {return data from REST request} data 
  * @param {status} status 
  */
-function processResponse(data, status) {
+function processResponse(restEndPointUrl, err, data, response) {
+    if(response===undefined || response === null){
+        console.error("No response received");
+        console.error(err);
+        
+        process.exit(1);
+    }
+    let status = response.status;
     if (prettyprint == true) {
         console.log(JSON.stringify(data, null, 4));
     }
@@ -93,9 +100,10 @@ function processResponse(data, status) {
     }
 }
 
-function downloadExport(data, status, filename) {
-    debug("Downloading Export");
-    if (status != 0) {
+function downloadExport(restEndPoint,err,data,response,filename) {
+    let status=response.status;
+    debug("Downloading Export (Status=" + status + ")");
+    if (status != 200) {
         console.log(JSON.stringify(data));
         process.exit(status);
     }
@@ -128,7 +136,7 @@ function exportwf(wfId, filename) {
 function importwf(filename) {
     debug("Importing Workflow");
     url += "/workflow-import";
-    rest.postUploadFile(url, username, password, timeout, undefined, filename, processResponse);
+    rest.postUploadFile(url, username, password, timeout, undefined, filename,"recipe", processResponse);
 
 }
 
