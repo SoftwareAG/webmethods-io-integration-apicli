@@ -4,7 +4,7 @@ This requires you to provide your tenant domain name, along with a user and pass
 The --help parameter provides further information on how to use this along with some examples of its usage.
 
 This CLI tool has been tested against
-* webMethods.io Integration v10.15
+* webMethods.io Integration v11.0.3
 
 # License
 This project is licensed under the Apache 2.0 License - see the LICENSE file for details
@@ -34,63 +34,84 @@ node wmiocli.js --help
 Usage: wmiocli [options] [command]
 
 Options:
-  -V, --version                                                                                                                  output the version number
-  -d, --domain <tenantDomain>                                                                                                    Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"
-  -u, --user <userid>                                                                                                            Tenant User ID
-  -p, --password <password>                                                                                                      Tenant User Password
-  -t, --timeout <delay>                                                                                                          timeout in seconds (default: one minute)
-  --prettyprint                                                                                                                  Pretty Print JSON output
-  --verbose                                                                                                                      Enables full debug mode (replaced by --loglevel DEBUG)
-  --loglevel <level>                                                                                                             Change the logging level of DEBUG, INFO,WARN,ERROR,OFF (default being off)
-  --proxy <proxyURL>                                                                                                             URL for proxy server if required
-  --caCert <path-to-cert>                                                                                                        Path to a CACert PEM file if required
-  --ignoreTLSErrors                                                                                                              Ignore TLS errors
-  -h, --help                                                                                                                     display help for command
+  -V, --version                                                                                                                              output the version number
+  -d, --domain <tenantDomain>                                                                                                                Tenant Doamin Name, e.g. "tenant.int-aws-us.webmethods.io"
+  -u, --user <userid>                                                                                                                        Tenant User ID
+  -p, --password <password>                                                                                                                  Tenant User Password
+  -s, --start <position>                                                                                                                     Index of where to start the return of data (default 0)
+  -l, --count <count>                                                                                                                        Count of items to return (default 1000)
+  -t, --timeout <delay>                                                                                                                      timeout in seconds (default: one minute)
+  --prettyprint                                                                                                                              Pretty Print JSON output
+  --verbose                                                                                                                                  Enables full debug mode (replaced by --loglevel DEBUG)
+  --loglevel <level>                                                                                                                         Change the logging level of DEBUG, INFO,WARN,ERROR,OFF (default being off)
+  --proxy <proxyURL>                                                                                                                         URL for proxy server if required
+  --caCert <path-to-cert>                                                                                                                    Path to a CACert PEM file if required
+  --ignoreTLSErrors                                                                                                                          Ignore TLS errors
+  --experimental                                                                                                                             Provide help information on experimental commands
+  -h, --help                                                                                                                                 display help for command
 
 Commands:
-  project [project-name]                                                                                                         Lists all projects or view an individual project, specified via project name or uid
-  project-assets <project-name>                                                                                                  Lists project assets from given project name or uid
-  project-assets-detailed <project-name>                                                                                         Lists project assets (All Details) from given project name or uid
-  project-create <project-name>                                                                                                  Create project with given name
-  project-update <project-id> <project-name>                                                                                     Update project with new name
-  project-delete <project-id>                                                                                                    Delete project with given id
-  project-publish <project-id> <publish-name> <target-tenant-domain-name> <target-user-id> <target-user-password> <assets-json>  Pubilsh project to another tenant with given id
-  project-deploy <projectName> <version>                                                                                         deploy published project with given version into tenant
-  project-param <project-name> [param-uid]                                                                                       Lists all project parameters from given project name, or specific parameter with given parameter uid
-  project-param-create <project-name> <param-name> <param-value> <required> <is-password>                                        Creates a project parameter with given values
-  project-param-update <project-name> <param-uid> <param-name> <param-value> <required> <is-password>                            Updates a project parameter matching the provided UID with given values
-  project-param-delete <project-name> <param-uid>                                                                                Deletes a project parameter mathcing the given paramater uid
-  project-webhooks-list <project-id>                                                                                             List webhooks in a project
-  project-webhooks-regenerate <project-id> <workflow-uid>                                                                        Regenerate a webhook in a project for a given workflow UID
-  project-webhooks-auth <project-id> <workflow-uid> <auth-type>                                                                  Set authenatication type (none,login,token) for a webhook in a project for a given workflow UID
-  project-triggers-list <project-id>                                                                                             Provide a list of triggers within a project
-  project-triggers-delete <project-id> <trigger-id>                                                                              Delete a trigger within a project with the given IDs
-  role [role-id]                                                                                                                 Lists all roles or views an individual role
-  role-create <role-name> <role-description> <roles-list>                                                                        Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name 2,r;
-  role-update <role-id> <role-name> <role-description> <roles-list>                                                              Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name 2,r;
-  role-delete <roleId>                                                                                                           Delete a roles with the given role id
-  user                                                                                                                           Lists all users
-  user-role-assignment <user-id> <role-names>                                                                                    Assigns a user to roles
-  workflow-export <project-id> <workflow-id> <filename>                                                                          Export workflow with id <workflow-id> from project <project-id>
-  workflow-import <project-id> <filename>                                                                                        Import workflow into project <project-id> from file <filename>
-  workflow-delete <project-id> <workflow-id>                                                                                     Delete workflow <workflow-id> from project <project-id>
-  workflow-execute <project-id> <workflow-id>                                                                                    Execute workflow <workflow-id> from project <project-id>
-  workflow-status <project-id> <run-id>                                                                                          Gets Execution status for workflow execution <run-id>
-  workflow-create <project-id> <worfklow-name> <workflow-description>                                                            Creates a blank workflow with the given name/description
-  flowservice-export <project-id> <flow-name> <file-name>                                                                        Export FlowService with name <flow-name> from project <project-id>
-  flowservice-import <project-id> <filename>                                                                                     Import FlowService from <filename> into project <project-id>
-  flowservice-delete <project-id> <flow-name>                                                                                    Delete FlowService <flow-name> from project <project-id>
-  flowservice-execute <project-id> <flow-name> [input-json]                                                                      Execute FlowService <flow-name> from project <project-id> with data <input-json>
-  theme [theme-uid]                                                                                                              Lists themes or views an individual theme, specified via uid
-  theme-create <theme-name> <theme-description> <theme-object> [footer-text] [about-page]                                        Create theme with given data
-  theme-update <theme-uid> <theme-name> <theme-description> <theme-object> [footer-text] [about-page]                            Update theme with the given UID with given data
-  theme-delete <theme-uid>                                                                                                       Delete theme with the given UID
-  theme-activate <theme-uid>                                                                                                     Activate theme with the given UID
-  theme-deactivate <theme-uid>                                                                                                   Deactivate theme with the given UID
-  recipe [recipe-uid]                                                                                                            List all Workflow recipes, or get a single recipe with a given recipe UID
-  recipe-delete <recipe-uid>                                                                                                     Delete Workflow recipe with a given recipe UID
-  recipe-create <filename>                                                                                                       Create Workfllow Receipt from file <filename>
-  help [command]                                                                                                                 display help for command
+  project [project-name]                                                                                                                     Lists all projects or view an individual project, specified via project name or uid
+  project-assets <project-name>                                                                                                              Lists project assets from given project name or uid
+  project-assets-detailed <project-name>                                                                                                     Lists project assets (All Details) from given project name or uid
+  project-create <project-name>                                                                                                              Create project with given name
+  project-update <project-id> <project-name>                                                                                                 Update project with new name
+  project-delete <project-id>                                                                                                                Delete project with given id
+  project-publish <project-id> <publish-name> <target-tenant-domain-name> <target-user-id> <target-user-password> <assets-json>              Pubilsh project to another tenant with given id
+  project-deploy <projectName> <version>                                                                                                     deploy published project with given version into tenant
+  project-param <project-name> [param-uid]                                                                                                   Lists all project parameters from given project name, or specific parameter with given parameter uid
+  project-param-create <project-name> <param-name> <param-value> <required> <is-password>                                                    Creates a project parameter with given values
+  project-param-update <project-name> <param-uid> <param-name> <param-value> <required> <is-password>                                        Updates a project parameter matching the provided UID with given values
+  project-param-delete <project-name> <param-uid>                                                                                            Deletes a project parameter mathcing the given paramater uid
+  project-webhooks-list <project-id>                                                                                                         List webhooks in a project
+  project-webhooks-regenerate <project-id> <workflow-uid>                                                                                    Regenerate a webhook in a project for a given workflow UID
+  project-webhooks-auth <project-id> <workflow-uid> <auth-type>                                                                              Set authenatication type (none,login,token) for a webhook in a project for a given workflow UID
+  project-triggers-list <project-id>                                                                                                         Provide a list of triggers within a project
+  project-triggers-delete <project-id> <trigger-id>                                                                                          Delete a trigger within a project with the given IDs
+  project-ref-data <project-id> [ref-data-name]                                                                                              lists/gets reference data in a project
+  project-ref-data-add <project-id> <ref-data-name> <ref-data-description> <filename> [field-separator] [text-qualifier] [file-encoding]     Adds reference data
+  project-ref-data-update <project-id> <ref-data-name> <ref-data-description> <filename> [field-separator] [text-qualifier] [file-encoding]  Updates reference data
+  project-ref-data-delete <project-id> <ref-data-name>                                                                                       Updates reference data
+  project-export <project-id>                                                                                                                Exports a project
+  role [role-id]                                                                                                                             Lists all roles or views an individual role
+  role-create <role-name> <role-description> <roles-list>                                                                                    Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name
+                                                                                                                                             2,r;
+  role-update <role-id> <role-name> <role-description> <roles-list>                                                                          Create roles and specify the permissions for that role. Roles-list should be provided as follows projectName,r,w,e;project name
+                                                                                                                                             2,r;
+  role-delete <roleId>                                                                                                                       Delete a roles with the given role id
+  user                                                                                                                                       Lists all users
+  user-role-assignment <user-id> <role-names>                                                                                                Assigns a user to roles
+  workflow-export <project-id> <workflow-id> <filename>                                                                                      Export workflow with id <workflow-id> from project <project-id>
+  workflow-import <project-id> <filename>                                                                                                    Import workflow into project <project-id> from file <filename>
+  workflow-delete <project-id> <workflow-id>                                                                                                 Delete workflow <workflow-id> from project <project-id>
+  workflow-execute <project-id> <workflow-id>                                                                                                Execute workflow <workflow-id> from project <project-id>
+  workflow-status <project-id> <run-id>                                                                                                      Gets Execution status for workflow execution <run-id>
+  workflow-create <project-id> <worfklow-name> <workflow-description>                                                                        Creates a blank workflow with the given name/description
+  flowservice-export <project-id> <flow-name> <file-name>                                                                                    Export FlowService with name <flow-name> from project <project-id>
+  flowservice-import <project-id> <filename>                                                                                                 Import FlowService from <filename> into project <project-id>
+  flowservice-delete <project-id> <flow-name>                                                                                                Delete FlowService <flow-name> from project <project-id>
+  flowservice-execute <project-id> <flow-name> [input-json]                                                                                  Execute FlowService <flow-name> from project <project-id> with data <input-json>
+  theme [theme-uid]                                                                                                                          Lists themes or views an individual theme, specified via uid
+  theme-create <theme-name> <theme-description> <theme-object> [footer-text] [about-page]                                                    Create theme with given data
+  theme-update <theme-uid> <theme-name> <theme-description> <theme-object> [footer-text] [about-page]                                        Update theme with the given UID with given data
+  theme-delete <theme-uid>                                                                                                                   Delete theme with the given UID
+  theme-activate <theme-uid>                                                                                                                 Activate theme with the given UID
+  theme-deactivate <theme-uid>                                                                                                               Deactivate theme with the given UID
+  recipe [recipe-uid]                                                                                                                        List all Workflow recipes, or get a single recipe with a given recipe UID
+  recipe-delete <recipe-uid>                                                                                                                 Delete Workflow recipe with a given recipe UID
+  recipe-create <filename>                                                                                                                   Create Workflow Recipe from file <filename>
+  monitor <from> <count> [start-date] [end-date] [projects-list] [workflows-list] [execution-status]                                         Get Monitor summary
+  monitor-workflow-log <bill-uid>                                                                                                            Get Monitor summary
+  idm-authtoken                                                                                                                              Get authtoken from IDM
+  idm-user <username>                                                                                                                        Get User information direct from IDM
+  idm-user-search <query> <includeRoles> <products>                                                                                          Searches user information from the IDM
+  idm-user-count [query]                                                                                                                     Counts users matching a provided query
+  idm-user-role-mappings <userid>                                                                                                            Finds role mappings for given user
+  idm-roles                                                                                                                                  Lists all assignable roles for the current environment
+  idm-user-create <first-name> <last-name> <email> <username>                                                                                Creates a new user in the IDM
+  idm-user-delete <user-id>                                                                                                                  Deletes a user
+  idm-user-unlock <user-id>                                                                                                                  Unlocks a user
+  help [command]                                                                                                                             display help for command
 
 
 Examples:
@@ -241,6 +262,47 @@ $ node wmiocli.js
     -u user
     -p password
     project-triggers-delete project-uid trigger-uid
+
+List Reference Data List:
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    referencedata project_name
+    e.g.
+    project-ref-data project-uid
+
+List Reference Data Get Item:
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    project-ref-data project-uid ref-data-name <json/csv>
+
+    e.g.
+    project-ref-data project-uid ref-data-name
+    project-ref-data project-uid ref-data-name json
+    project-ref-data project-uid ref-data-name csv
+
+Add Reference Data:
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    project-ref-data-add project-uid name description filepath <field separator> <text_qualifier> <file_encoding>
+
+    e.g.
+    project-ref-data-add flf1111 reflookup description test.csv
+
+Update Reference Data:
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    project-ref-data-add project-uid name description filepath <field separator> <text_qualifier> <file_encoding>
+
+    e.g.
+    project-ref-data-update flf1111 reflookup description test.csv
 
 Workflow
 
@@ -430,4 +492,102 @@ $ node wmiocli.js
     -u user
     -p password
     theme-deactivate [theme-uid]
+
+
+Monitor
+
+Retrieve Monitor Summary:
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    monitor from count startDate endDate projectsList workflowsList executionStatus
+    e.g.
+    monitor 1 10 2023-01-01 2023-01-10 myProject workflow1,workflow2 failed,timeout,stopped
+    monitor 11 10 2023-01-01 2023-01-10 myProject workflow1,workflow2 failed,timeout,stopped
+    monitor
+
+
+View an Execution Log:
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    monitor-workflow-log billUid
+
+
+webMethods Cloud IDM
+
+Provides an IDM authtoken for subsequent calls
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-authtoken
+
+Gets an IDM users details
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-user <username>
+
+Finds users that match the search criteria
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-user-search <query> <include roles - true|false> <product>
+    where product is one of: apigateway, apiportal, webmethodsioint, b2b,
+    cumulocity, cloudcontainer, devportal, mft, metering, wmapps
+    e.g.
+    idm-user-search Dave true webmethodsioint
+
+Counts users that match the search criteria
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-user-count <query>
+    where query can be a partial username, e.g.
+    idm-user-count dave
+
+Lists environment available roles
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-roles
+
+Gets user role mappings for the given userid
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-user-role-mappings <userid>
+    where userid is the unique ID returned from the idm-user call
+
+Creates a user
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-user-create <first-name> <last-name> <email> <username>
+
+Deletes a user
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-user-delete <userid>
+    where userid is the unique ID returned from the idm-user call
+
+Unlocks a user
+$ node wmiocli.js
+    -d tenant.int-aws-us.webmethods.io
+    -u user
+    -p password
+    idm-user-unlock <userid>
+    where userid is the unique ID returned from the idm-user call
+
 ```
