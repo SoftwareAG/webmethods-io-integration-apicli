@@ -32,5 +32,6 @@ jobs:
     - name: Test Build
       shell: bash
       run: |              
-        npm test ${{ secrets.TENANT_USER_ID }} '${{ secrets.TENANT_USER_PW }}'
+        npm test ${{ secrets.TENANT_USER_ID }} '${{ secrets.TENANT_USER_PW }}' ${{secrets.DEV_TENANT}} ${{secrets.PROD_TENANT}}
+
        
