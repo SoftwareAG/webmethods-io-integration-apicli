@@ -22,6 +22,7 @@ var hideExperimental = true;
 returnStart = 0;
 returnCount = 1000;
 const { setLogLevel } = require('./debug.js');
+const { isTypedArray } = require('util/types');
 
 dbg = require('./debug.js');
 prettyprint = false;
@@ -77,19 +78,19 @@ function checkOptions() {
     returnCount = program.opts().count;
   }
 
-
   ignoreTLS = program.opts().ignoreTLSErrors;
-
 
   if (program.opts().prettyprint == true) {
     prettyprint = true;
   }
 
-  
-
   var levelInput = program.opts().loglevel
   if (program.opts().verbose == true) {
     levelInput = "DEBUG";
+  }
+
+  if (program.opts().experimentalCommands == true){
+    hideExperimental = false;
   }
 
   if (levelInput == undefined && !program.opts().verbose) {
@@ -174,7 +175,7 @@ program
   .option('--proxy <proxyURL>', 'URL for proxy server if required')
   .option('--caCert <path-to-cert>', 'Path to a CACert PEM file if required')
   .option('--ignoreTLSErrors', 'Ignore TLS errors')
-  .option('--experimental', 'Provide help information on experimental commands')
+  .option('--experimentalCommands', 'Provide help information on experimental commands')
 
 
   //Additional help
@@ -187,6 +188,9 @@ program
 
 
   `)
+
+  
+
 
   .addHelpText('after', `
 
@@ -207,8 +211,6 @@ $ node wmiocli.js --help
     + monitor.help()
     + idm.help()
   )
-
-
   .showSuggestionAfterError()
   ;
 

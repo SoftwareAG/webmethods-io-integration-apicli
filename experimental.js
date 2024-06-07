@@ -50,6 +50,19 @@ var incEdgeFlows;
 
 const maxRunningWorkflows = 20;
 
+function help() {
+    return `
+\x1b[4mExperimental - Projects\x1b[0m
+
+\x1b[32mGet recipe list or individual recipe\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user
+    -p password 
+    project [project name]
+
+    `;
+}
 
 
 function generateUUID(){
@@ -1151,7 +1164,7 @@ function loginResponse(url,err,body,res){
 
 
 
-module.exports = {init,
+module.exports = {init, help,
     user,stages,
     searchProject,
     projectDeployments,

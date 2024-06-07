@@ -2,6 +2,8 @@
 
 USER=$1
 PASS=$2
+DEV_TENANT=$3
+PROD_TENANT=$4
 
 LOG_FILE=test-output.log
 rm -rf $LOG_FILE
@@ -21,8 +23,8 @@ executed_counter=0
 
 
 # Check if both username and password are provided
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <username> <password>"
+if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 <username> <password> <dev_tenant_prefix> <prod_tenant_prefix>"
     exit 1
 fi
 
