@@ -5,14 +5,12 @@
  */
 
 const rest = require('./rest-fetch.js');
-const dbg = require('./debug.js');
-
 
 var domainName, username,password,timeout,prettyprint;
 var url;
 
 function debug(message){
-    dbg.message("<FLOWSERVICE> " + message,4);
+    logger.debug("<FLOWSERVICE> " + message);
 }
 
 function help(){

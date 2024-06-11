@@ -18,7 +18,7 @@ function checkForErrors(inBody) {
 }
 
 function debug(message) {
-    dbg.message("<ROLES> " + message,4);
+    logger.debug("<ROLES> " + message);
 }
 
 function help() {

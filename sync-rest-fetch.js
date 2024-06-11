@@ -18,7 +18,7 @@ let cookieJar = [];
 let domain;
 
 function consolelog(message, level) {
-    dbg.message("<REST-FETCH>:" + message,level);
+    logger.debug("<REST-FETCH>:" + message,level);
 }
 
 function debug(message) {

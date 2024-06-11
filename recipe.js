@@ -10,7 +10,7 @@ var domainName, username, password, timeout, prettyprint;
 var url;
 
 function debug(message) {
-    dbg.message("<RECIPE> " + message,4);
+    logger.debug("<RECIPE> " + message);
 }
 function help() {
     return `

@@ -8,36 +8,30 @@
 
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const { CookieJar } = require('tough-cookie');
-const zlib = require('zlib');
+//const zlib = require('zlib');
 const fs = require ('fs')
 const { FormData } = require('formdata-node');
 const { fileFromPathSync } = require('formdata-node/file-from-path');
 const { HttpsProxyAgent }= require('https-proxy-agent');
 var proxyAgent = undefined;
-const { message } = require('./debug');
-const { warn } = require('console');
 const cj = new CookieJar();
 var cookieJar = [];
 var domain
 
-function consolelog(message,level)
-{
-    dbg.message("<REST-FETCH>:" + message,level);
-}
 function debug(message){
-    consolelog(message,4);
+    logger.debug(message);
 }
 
 function info(message){
-    consolelog(message,3);
+    logger.info(message);
 }
 
 function warning(message){
-    consolelog(message,2);
+    logger.warn(message);
 }
 
 function error(message){
-    consolelog(message,1);
+    logger.error(message);
 }
 
 
@@ -67,17 +61,18 @@ function addCookieToJar(cookie,domainName)
 function displayCookies()
 {
     warning("------------------------- COOKIES -------------------------");
-    warning(`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⠴⠶⠦⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣴⡯⠤⠴⠶⠶⠶⠿⠷⠶⠶⠦⠤⣴⠚⠛⠒⠶⣤⡀⠀⠀⠀⠀⠀⠀⠀
-    ⠀⠀⠀⠀⢀⣀⣠⣄⣤⠶⢚⣯⠭⠤⠶⠤⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⢦⣀⡀⠀⠈⢹⣆⠀⠀⠀⠀⠀⠀
-    ⠀⢀⡴⠞⠉⠀⠀⢀⡟⠀⢯⣄⣀⣀⣀⣀⣠⠿⠀⠀⢀⡤⠤⠒⠒⠒⠶⢤⡀⠈⠉⠉⣉⣭⣭⣗⣦⣄⡀⠀⠀
-    ⠀⣟⣀⣀⣠⠴⠞⠉⠀⡠⠤⠶⠾⣍⡭⠥⠤⠤⣀⠀⠘⢧⣀⠀⠀⠀⠀⣀⣽⣀⣀⣈⣧⡀⠀⠀⠈⠙⢿⣦⡀
-    ⣰⠋⠁⠀⠀⣀⣀⡀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠉⠉⡹⠛⠉⠀⠀⠈⠉⠻⣗⠲⠦⠤⠾⠋⢷
-    ⡏⠀⣴⠋⠉⠁⠈⠉⣳⠀⠀⠀⢀⣠⠤⠶⠦⠤⣄⡀⠀⠀⠀⠀⠀⣀⠤⠴⠶⠦⣤⡀⠀⠀⠈⠓⠀⢀⣀⠀⣼
-    ⢷⡀⠈⠙⠒⠒⠒⠋⠁⠈⣒⣤⣘⣧⣄⣀⠀⠀⢈⣻⠀⠀⠀⠀⠘⢥⣀⠀⠀⠀⠀⢹⡆⠀⢀⡴⠚⠉⣩⣷⠏
-    ⠈⠳⣤⡀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠈⠉⠛⠫⡍⠉⠁⠀⡴⠒⠤⣤⡀⠈⠉⠉⠙⠛⠋⠁⠀⠺⠤⢖⣫⠟⠃⠀
-    ⠀⠀⠈⠙⠳⢦⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⠒⠒⠃⠀⠀⠀⠀⠀⢀⣀⣤⠴⠞⠋⠁⠀⠀⠀
-    ⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠛⠛⠛⠛⠒⠒⠒⠒⠒⠒⠒⠒⠒⠒⠛⠛⠛⠛⠛⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀`);
+    // warning(`
+    //     ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⠴⠶⠦⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣴⡯⠤⠴⠶⠶⠶⠿⠷⠶⠶⠦⠤⣴⠚⠛⠒⠶⣤⡀⠀⠀⠀⠀⠀⠀⠀
+    // ⠀⠀⠀⠀⢀⣀⣠⣄⣤⠶⢚⣯⠭⠤⠶⠤⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⢦⣀⡀⠀⠈⢹⣆⠀⠀⠀⠀⠀⠀
+    // ⠀⢀⡴⠞⠉⠀⠀⢀⡟⠀⢯⣄⣀⣀⣀⣀⣠⠿⠀⠀⢀⡤⠤⠒⠒⠒⠶⢤⡀⠈⠉⠉⣉⣭⣭⣗⣦⣄⡀⠀⠀
+    // ⠀⣟⣀⣀⣠⠴⠞⠉⠀⡠⠤⠶⠾⣍⡭⠥⠤⠤⣀⠀⠘⢧⣀⠀⠀⠀⠀⣀⣽⣀⣀⣈⣧⡀⠀⠀⠈⠙⢿⣦⡀
+    // ⣰⠋⠁⠀⠀⣀⣀⡀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠉⠉⡹⠛⠉⠀⠀⠈⠉⠻⣗⠲⠦⠤⠾⠋⢷
+    // ⡏⠀⣴⠋⠉⠁⠈⠉⣳⠀⠀⠀⢀⣠⠤⠶⠦⠤⣄⡀⠀⠀⠀⠀⠀⣀⠤⠴⠶⠦⣤⡀⠀⠀⠈⠓⠀⢀⣀⠀⣼
+    // ⢷⡀⠈⠙⠒⠒⠒⠋⠁⠈⣒⣤⣘⣧⣄⣀⠀⠀⢈⣻⠀⠀⠀⠀⠘⢥⣀⠀⠀⠀⠀⢹⡆⠀⢀⡴⠚⠉⣩⣷⠏
+    // ⠈⠳⣤⡀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠈⠉⠛⠫⡍⠉⠁⠀⡴⠒⠤⣤⡀⠈⠉⠉⠙⠛⠋⠁⠀⠺⠤⢖⣫⠟⠃⠀
+    // ⠀⠀⠈⠙⠳⢦⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⠒⠒⠃⠀⠀⠀⠀⠀⢀⣀⣤⠴⠞⠋⠁⠀⠀⠀
+    // ⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠛⠛⠛⠛⠒⠒⠒⠒⠒⠒⠒⠒⠒⠒⠛⠛⠛⠛⠛⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀`);
     for(var i=0;i<cookieJar.length;i++)
     {
         var cookieVal = cookieJar[i].split(";")[0];
