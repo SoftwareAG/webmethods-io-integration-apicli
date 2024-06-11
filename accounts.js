@@ -12,7 +12,7 @@ var prettyprint = false;
 var url;
 
 function debug(message) {
-    dbg.message("<ACCOUNTS> " + message,4);
+    logger.debug("<ACCOUNTS> " + message);
 }
 
 function help() {

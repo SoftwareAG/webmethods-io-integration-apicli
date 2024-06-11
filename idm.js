@@ -13,7 +13,7 @@ var url;
 var bearerToken;
 
 function debug(message) {
-    dbg.message("<IDM> " + message,4);
+    logger.debug("<IDM> " + message);
 }
 function help() {
     return `

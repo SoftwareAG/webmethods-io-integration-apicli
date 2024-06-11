@@ -21,10 +21,10 @@ var experimental = require('./experimental.js');
 var hideExperimental = true;
 returnStart = 0;
 returnCount = 1000;
-const { setLogLevel } = require('./debug.js');
-const { isTypedArray } = require('util/types');
+log4js = require("log4js");
+logger = log4js.getLogger();
+logger.level="off";
 
-dbg = require('./debug.js');
 prettyprint = false;
 proxy = undefined;
 caCertFile = undefined;
@@ -99,19 +99,19 @@ function checkOptions() {
   else {
     switch (levelInput) {
       case "OFF":
-        dbg.setLogLevel(0);
+        logger.level= "off";
         break;
       case "ERROR":
-        dbg.setLogLevel(1);
+        logger.level = "error";
         break;
       case "WARN":
-        dbg.setLogLevel(2);
+        logger.level = "warn";
         break;
       case "INFO":
-        dbg.setLogLevel(3);
+        logger.level = "info";
         break;
       case "DEBUG":
-        dbg.setLogLevel(4);
+        logger.level = "debug";
         break;
       default:
         console.log("-level incorrectly set, should be one of: OFF, ERROR, WARN, INFO, DEBUG");
@@ -147,8 +147,9 @@ function checkOptions() {
 }
 
 function debug(message) {
-  dbg.message("<MAIN> " + message, 4);
+  logger.debug(message);
 }
+
 const program = new Command();
 
 program

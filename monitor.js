@@ -12,7 +12,7 @@ var prettyprint = false;
 var url;
 
 function debug(message) {
-    dbg.message("<MONITOR> " + message,4);
+    logger.debug("<MONITOR> " + message);
 }
 
 function help() {

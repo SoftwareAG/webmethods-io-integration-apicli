@@ -19,7 +19,7 @@ function checkForErrors(inBody)
 }
 
 function debug(message){
-    dbg.message("<USERS> " + message,4);
+    logger.debug("<USERS> " + message);
 }
 
 

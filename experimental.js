@@ -72,21 +72,21 @@ function generateUUID(){
 }
 
 function debug(message){
-    dbg.message("<EXPERIMENTAL> " + message,4);
+    logger.debug("<EXPERIMENTAL> " + message);
 }
 
 function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     
-    dbg.message("EXPERIMENTAL/UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK",3);
+    logger.warn("EXPERIMENTAL/UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK");
     domainName = inDomainName;
     username = inUsername;
     password = inPassword;
     timeout = inTimeout;
     prettyprint = inPrettyprint;
     url = "https://" + domainName;
-    dbg.message("<EXPERIMENTAL>Username [" + username + "]",4);
-    dbg.message("<EXPERIMENTAL>URL      [" + url + "]",4);
-    dbg.message("<EXPERIMENTAL>Timeout  [" + timeout + "]",4);
+    logger.debug("<EXPERIMENTAL>Username [" + username + "]");
+    logger.debug("<EXPERIMENTAL>URL      [" + url + "]");
+    logger.debug("<EXPERIMENTAL>Timeout  [" + timeout + "]");
 }
 
 
@@ -100,10 +100,10 @@ function flowserviceDetails(inProjectId,includeEdgeFlows)
 
 function processflowDetails()
 {
-    debug("Process FlowService Details - Project [" + projectId + "] Include Edge flows [" + incEdgeFlows + "]");
+    logger.debug("Process FlowService Details - Project [" + projectId + "] Include Edge flows [" + incEdgeFlows + "]");
     var endPoint = "https://" +domainName + "/integration/rest/ut-flow/flow-metadata/" + projectId + "?limit=" + returnCount+ "&skip=" + returnStart;
     var body;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"GET",processResponse,headers,true,false);  
 }
@@ -121,7 +121,7 @@ function flowserviceOption(inFlowServiceId, inEnable, inProjectId,inOptionType)
 function processflowOption()
 {
     var headers = setHeaders();
-    debug("Process FlowService Option [" + flowOptionType + "] - Project [" + projectId + "] FlowService [" + flowServiceId + "] Enable [" + optionEnable + "]");
+    logger.debug("Process FlowService Option [" + flowOptionType + "] - Project [" + projectId + "] FlowService [" + flowServiceId + "] Enable [" + optionEnable + "]");
     if(optionEnable!==undefined&&optionEnable!==null&optionEnable.length>1){
         optionEnable = (optionEnable.toLowerCase()=="true");
     }
@@ -134,7 +134,7 @@ function processflowOption()
         endPoint+= "/ut-flow/flow/export/" + flowServiceId +"?projectName="+ projectId ;
         body = {"integration":{"serviceData":{"stages":[{"stageName":"stage00","markExportable":optionEnable}]}}};
 
-        debug("Next URL [" + endPoint + "]");
+        logger.debug("Next URL [" + endPoint + "]");
         rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"PUT",processResponse,headers,true,false);  
 
     }
@@ -170,10 +170,10 @@ function flowserviceScheduler(inFlowServiceId, inScheduleStatus, inProjectId)
 
 function processScheduleStatus()
 {
-    debug("Process FlowService Schedule Status - Project [" + projectId + "] FlowService [" + flowServiceId + "] Status [" + scheduleStatus + "]");
+    logger.debug("Process FlowService Schedule Status - Project [" + projectId + "] FlowService [" + flowServiceId + "] Status [" + scheduleStatus + "]");
 
     var endPoint = "https://" +domainName + "/integration/rest/scheduler/"+ scheduleStatus +"/" + flowServiceId +"?projectName="+ projectId ;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     var body;
     rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,headers,true,false);  
@@ -221,7 +221,7 @@ function getProjectAccountConfig(inProjectId)
 
 function projectDeployments(inProjectId)
 {
-    dbg.message("<EXPERIMENTAL>Listing project deployments for projectId [" + inProjectId + "]",4);
+    logger.debug("<EXPERIMENTAL>Listing project deployments for projectId [" + inProjectId + "]");
     projectId = inProjectId;
     finalCall = getProjectDeployments;
     loginPhase1();
@@ -254,7 +254,7 @@ function messagingSubscriberDisable(inProjectId,inSubscriberName){
 }
 
 function messagingSubscriber(inProjectId,inSubscriberName,state){
-    debug("Starting subscriber state change");
+    logger.debug("Starting subscriber state change");
     projectId = inProjectId;
     subscriberName = inSubscriberName;
     subscriberState = state;
@@ -312,12 +312,12 @@ function vbidAnalysis(inVbid, inFormat)
 
 function debugMonitorInfo()
 {
-    debug("Monitor Project:         [" + projectName + "]");
-    debug("Monitor Project ID:      [" + projectId  + "]");
-    debug("Monitor workflowId:      [" + workflowId + "]");
-    debug("Monitor executionStatus: [" + executionStatus + "]");
-    debug("Monitor startDate:       [" + startDate + "]");
-    debug("Monitor endDate:         [" + endDate + "]");
+    logger.debug("Monitor Project:         [" + projectName + "]");
+    logger.debug("Monitor Project ID:      [" + projectId  + "]");
+    logger.debug("Monitor workflowId:      [" + workflowId + "]");
+    logger.debug("Monitor executionStatus: [" + executionStatus + "]");
+    logger.debug("Monitor startDate:       [" + startDate + "]");
+    logger.debug("Monitor endDate:         [" + endDate + "]");
 }
 
 function processMonitorBody()
@@ -376,9 +376,9 @@ function setHeaders()
 function getVbidAnalysis()
 {
     
-    dbg.message("<EXPERIMENTAL>Getting VBID analysis [" + vbid + "]");
+    logger.info("<EXPERIMENTAL>Getting VBID analysis [" + vbid + "]");
     var endPoint = "https://" + domainName + "/enterprise/v1/tenant/logs/" + vbid + "?field=created_at&direction=asc";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processVbidResponse,headers,true,false);  
 
@@ -386,11 +386,11 @@ function getVbidAnalysis()
 
 function checkResubmissions()
 {
-    debug("Check Resubmissions")
+    logger.debug("Check Resubmissions")
     debugMonitorInfo();
     //Check running
     var endPoint = "https://" + domainName + "/enterprise/v1/metrics/workflowexecutions/logs";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var body=processMonitorBody();
     body.execution_status=["running"];
     var headers = setHeaders();
@@ -398,11 +398,11 @@ function checkResubmissions()
 }
 
 function processResubmissions(fetchSize,reprocessCount){
-    debug("Process Resubmissions")
+    logger.debug("Process Resubmissions")
     debugMonitorInfo();
     //Check running
     var endPoint = "https://" + domainName + "/enterprise/v1/metrics/workflowexecutions/logs";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var body=processMonitorBody();
     body.limit=reprocessCount;
     body.execution_status=["failed"];
@@ -411,31 +411,31 @@ function processResubmissions(fetchSize,reprocessCount){
 }
 
 function processSingleResubmission(a,b, invbid){
-    dbg.message("<EXPERIMENTAL>Processing Resubmission [" + (a+1) + " of " + b + "] Action [" + startOrResume + "] VBID [" + invbid + "]",3);
+    logger.info("<EXPERIMENTAL>Processing Resubmission [" + (a+1) + " of " + b + "] Action [" + startOrResume + "] VBID [" + invbid + "]");
     var endPoint = "https://" + domainName + "/enterprise/v1/tenant/account/billlogs/" + invbid;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processSingleResubmissionResponse,headers,true,false);  
 }
 
 
 function getThePayload(invbid){
-    dbg.message("<EXPERIMENTAL>" + invbid + ":Fetching Payload For Restart - VBID [" + invbid + "]",4);
+    logger.debug("<EXPERIMENTAL>" + invbid + ":Fetching Payload For Restart - VBID [" + invbid + "]");
     var endPoint = "https://" + domainName + "/enterprise/v1/payloads?bill_uid=" + invbid
-    dbg.message("<EXPERIMENTAL>" +invbid + ":getThePayload Next URL [" + endPoint + "]");
+    logger.debug("<EXPERIMENTAL>" +invbid + ":getThePayload Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processPayloadResponse,headers,true,false);  
 }
 
 function finishProcessSingleResubmission(invbid,inwfuid,inPayloaduid,projectuid,data)
 {
-    dbg.message("<EXPERIMENTAL>" +invbid + ":Actioning Resubmission Action [" + startOrResume + "] VBID [" + invbid + "]",4);
+    logger.debug("<EXPERIMENTAL>" +invbid + ":Actioning Resubmission Action [" + startOrResume + "] VBID [" + invbid + "]");
     var endPoint
     
     if (startOrResume == "resume") endPoint = "https://" + domainName + "/enterprise/v1/execute/" + inwfuid + "/resume";
     else endPoint = "https://" + domainName + "/enterprise/v1/execute/" + invbid + "/restart";
     
-    dbg.message("<EXPERIMENTAL>" +invbid + ":Next URL [" + endPoint + "]",4);
+    logger.debug("<EXPERIMENTAL>" +invbid + ":Next URL [" + endPoint + "]");
     var headers = setHeaders();
     var body;
     if(startOrResume=="resume"){ 
@@ -452,43 +452,43 @@ function processPayloadResponse(url,err,body,res){
     if(res.status==200)
     {
         data={};
-        dbg.message("<EXPERIMENTAL>Processing Payload Response",4);
-        dbg.message("<EXPERIMENTAL>URL" + url,4);
-        if(body)dbg.message("<EXPERIMENTAL>JSON RESP\n" + JSON.stringify(body),4);
-        if(res) dbg.message("<EXPERIMENTAL>RES\n" + JSON.stringify(res),4);
+        logger.debug("<EXPERIMENTAL>Processing Payload Response");
+        logger.debug("<EXPERIMENTAL>URL" + url);
+        if(body)logger.debug("<EXPERIMENTAL>JSON RESP\n" + JSON.stringify(body));
+        if(res) logger.debug("<EXPERIMENTAL>RES\n" + JSON.stringify(res));
         if(body.output.length==1 && body.output[0].data){
             data = body.output[0].data;
         }
         else {
-            dbg.message("<EXPERIMENTAL>Found no payload response",4);
-            if(body!=null)dbg.message(JSON.stringify(body),4);
+            logger.debug("<EXPERIMENTAL>Found no payload response");
+            if(body!=null)logger.debug(JSON.stringify(body));
         }
 
         if(body.output.length==1 && body.output[0].type)
         {
             type = body.output[0].type;
-            if(body)dbg.message("<EXPERIMENTAL>Payload Resp: " + JSON.stringify(body),4);
+            if(body)logger.debug("<EXPERIMENTAL>Payload Resp: " + JSON.stringify(body));
             finishProcessSingleResubmission(vbid,flowuid,payloaduid,projectuid,data);
         }
         else{
-            if(body!=null)dbg.message(JSON.stringify(body),2);
-            dbg.message("<EXPERIMENTAL>Unable to determine type",2);
+            if(body!=null)logger.warn(JSON.stringify(body));
+            logger.warn("<EXPERIMENTAL>Unable to determine type");
         }
 
         
     }
     else
     {
-        dbg.message("<EXPERIMENTAL>Failed to " + "restart" + " entry",1)
-        if(body!=null)dbg.message(JSON.stringify(body),1);
-        if(err!=null)dbg.message(JSON.stringify(err),1);
+        logger.fatal("<EXPERIMENTAL>Failed to " + "restart" + " entry")
+        if(body!=null)logger.fatal(JSON.stringify(body));
+        if(err!=null)logger.fatal(JSON.stringify(err));
         process.exit(99);
     }
 }
 
 
 function processFinalSingleResubmissionResponse(url,err,body,res){
-    if(body!=null)dbg.message("<EXPERIMENTAL> Submission Resp:" + JSON.stringify(body),4);
+    if(body!=null)logger.debug("<EXPERIMENTAL> Submission Resp:" + JSON.stringify(body));
     if(res.status==200)
     {
         var respvbid,respstatus;
@@ -501,13 +501,13 @@ function processFinalSingleResubmissionResponse(url,err,body,res){
             respstatus = body.output.status;
         }
         
-        dbg.message("<EXPERIMENTAL>Processed VBID: " + respvbid + " - New Status [" + respstatus + "]",3);
+        logger.info("<EXPERIMENTAL>Processed VBID: " + respvbid + " - New Status [" + respstatus + "]");
     }
     else
     {
-        dbg.message("<EXPERIMENTAL>Failed to " + startOrResume + " Monitor item",1)
-        if(body!=null)dbg.message("<EXPERIMENTAL>" + JSON.stringify(body),1);
-        if(err!=null)dbg.message("<EXPERIMENTAL>"+ JSON.stringify(err),1);
+        logger.fatal("<EXPERIMENTAL>Failed to " + startOrResume + " Monitor item")
+        if(body!=null)logger.fatal("<EXPERIMENTAL>" + JSON.stringify(body));
+        if(err!=null)logger.fatal("<EXPERIMENTAL>"+ JSON.stringify(err));
         process.exit(99);
     }
 }
@@ -521,7 +521,7 @@ function logsToCSV(logsJson){
     var sep = ",";
 
     for(var i=0;i<logsJson.output.objects.length;i++){
-        dbg.message("<EXPERIMENTAL>"+"CSV Conversion [" + i + "]",4);
+        logger.debug("<EXPERIMENTAL>"+"CSV Conversion [" + i + "]");
         activityId = logsJson.output.objects[i].activity_id;        
         activityLabel = logsJson.output.objects[i].activity_label;
         activityType = logsJson.output.objects[i].type;
@@ -545,7 +545,7 @@ function logsToCSV(logsJson){
         csv += activityId + sep + activityLabel + sep + activityType + sep + message + sep + actionDate + sep;
         if(i>0)
         {
-            dbg.message("<EXPERIMENTAL>"+"CSV Conversion Calculating delta",4);
+            logger.debug("<EXPERIMENTAL>"+"CSV Conversion Calculating delta");
             var dateObjPrev = new Date(prevDate);
             var dateObjCurr = new Date(actionDate);
             var res = dateObjCurr.getTime() - dateObjPrev.getTime();
@@ -569,7 +569,7 @@ function processVbidResponse(url,err,body,res){
     {
         if(body.output.objects)
         {
-            dbg.message("<EXPERIMENTAL>"+"Found Logs for - VBID",4);
+            logger.debug("<EXPERIMENTAL>"+"Found Logs for - VBID");
             
             var outputFormat = format.toUpperCase();
 
@@ -577,22 +577,22 @@ function processVbidResponse(url,err,body,res){
             {
 
                 case "JSON":
-                    dbg.message("<EXPERIMENTAL>"+"Outputting in JSON Format",4);
+                    logger.debug("<EXPERIMENTAL>"+"Outputting in JSON Format");
                     if(prettyprint==true){
-                        dbg.message(JSON.stringify(body,null,4),-1);
+                        console.log(JSON.stringify(body,null,4));
                     }
                     else{
-                        dbg.message((JSON.stringify(body)),-1);
+                        console.log(JSON.stringify(body));
                     }  
                     break;
                 case "CSV":
-                    dbg.message("<EXPERIMENTAL>"+"Outputting in CSV Format",4);
+                    logger.debug("<EXPERIMENTAL>"+"Outputting in CSV Format");
                     var csv = logsToCSV(body);
-                    dbg.message(csv,-1);
+                    console.log(csv);
                     break;
 
                 default: 
-                    dbg.message("<EXPERIMENTAL>" + "Please provide a valid format - either JSON or CSV");
+                    logger.debug("<EXPERIMENTAL>" + "Please provide a valid format - either JSON or CSV");
                     break;
             }
             
@@ -601,13 +601,13 @@ function processVbidResponse(url,err,body,res){
         }
         else{
 
-            dbg.message("<EXPERIMENTAL>"+ "Unable to find logs for VBID",1);
+            logger.fatal("<EXPERIMENTAL>"+ "Unable to find logs for VBID");
         }
     }
     else
     {
-        dbg.message("<EXPERIMENTAL>"+"Failed to get logs for VBID",1)
-        dbg.message(JSON.stringify(body),1);
+        logger.fatal("<EXPERIMENTAL>"+"Failed to get logs for VBID")
+        console.log(JSON.stringify(body));
         process.exit(99);
     }
 }
@@ -618,16 +618,16 @@ function processSingleResubmissionResponse(url,err,body,res){
     {
         if(body.output.uid)
         {
-            dbg.message("<EXPERIMENTAL>"+"Found Monitor Entry - VBID[" + body.output.uid +"]",4);
-            dbg.message("<EXPERIMENTAL>"+"Flow UID     [" + body.output.flow_uid + "]",4);
-            dbg.message("<EXPERIMENTAL>"+"Payload UID  [" + body.output.payload_uid + "]",4);
-            dbg.message("<EXPERIMENTAL>"+"Project_UID  [" + body.output.project_uid + "]",4);
-            dbg.message("<EXPERIMENTAL>"+"Flow Name    [" + body.output.flow_name + "]",4);
-            dbg.message("<EXPERIMENTAL>"+"Stop time    [" + body.output.stop_time + "]",4);
-            dbg.message("<EXPERIMENTAL>"+"Restarted    [" + body.output.restarted + "]",4)
-            dbg.message("<EXPERIMENTAL>"+"Manual Run    [" + body.output.manual_run + "]",4)
-            dbg.message("<EXPERIMENTAL>"+"hide_resume    [" + body.output.hide_resume + "]",4)
-            dbg.message("<EXPERIMENTAL>"+"JSON RESPONSE\n" + JSON.stringify(body) + "\n",4);
+            logger.debug("<EXPERIMENTAL>"+"Found Monitor Entry - VBID[" + body.output.uid +"]");
+            logger.debug("<EXPERIMENTAL>"+"Flow UID     [" + body.output.flow_uid + "]");
+            logger.debug("<EXPERIMENTAL>"+"Payload UID  [" + body.output.payload_uid + "]");
+            logger.debug("<EXPERIMENTAL>"+"Project_UID  [" + body.output.project_uid + "]");
+            logger.debug("<EXPERIMENTAL>"+"Flow Name    [" + body.output.flow_name + "]");
+            logger.debug("<EXPERIMENTAL>"+"Stop time    [" + body.output.stop_time + "]");
+            logger.debug("<EXPERIMENTAL>"+"Restarted    [" + body.output.restarted + "]")
+            logger.debug("<EXPERIMENTAL>"+"Manual Run    [" + body.output.manual_run + "]")
+            logger.debug("<EXPERIMENTAL>"+"hide_resume    [" + body.output.hide_resume + "]")
+            logger.debug("<EXPERIMENTAL>"+"JSON RESPONSE\n" + JSON.stringify(body) + "\n");
 
             
 
@@ -639,24 +639,24 @@ function processSingleResubmissionResponse(url,err,body,res){
 
 
             if(startOrResume.indexOf("restart")==0){
-                debug("In restart procedure");
+                logger.debug("In restart procedure");
                 if(body.output.manual_run == true){
-                    dbg.message("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Restart Not Available",2);
+                    logger.warn("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Restart Not Available");
                 }
                 else {
                     if(startOrResume=="restart-all"){
-                        debug("is a restart all)");
-                        if(body.output.restarted==true)dbg.message("<EXPERIMENTAL>"+ "Restarting [" + body.output.uid + "] when this has been done previously.",2);
+                        logger.debug("is a restart all)");
+                        if(body.output.restarted==true)logger.warn("<EXPERIMENTAL>"+ "Restarting [" + body.output.uid + "] when this has been done previously.");
                         getThePayload(body.output.uid);
                     }
                     else{
-                        debug("is a normal restart)");
+                        logger.debug("is a normal restart)");
                         if(body.output.restarted != true){
-                            dbg.message("<EXPERIMENTAL>"+ "Restarting [" + body.output.uid + "]",4);
+                            logger.debug("<EXPERIMENTAL>"+ "Restarting [" + body.output.uid + "]");
                             getThePayload(body.output.uid);
                         }
                         else{
-                            dbg.message("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Has been restarted previously. Use restart-all as the option if you need to restart this",2);
+                            logger.warn("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Has been restarted previously. Use restart-all as the option if you need to restart this");
                         }
                     }
                 }
@@ -664,25 +664,25 @@ function processSingleResubmissionResponse(url,err,body,res){
             
             if(startOrResume=="resume"){
                 if(body.output.hide_resume == false){
-                    dbg.message("<EXPERIMENTAL>"+ "Resuming [" + body.output.uid + "]",4);
+                    logger.debug("<EXPERIMENTAL>"+ "Resuming [" + body.output.uid + "]");
                     finishProcessSingleResubmission(body.output.uid,body.output.flow_uid,body.output.payload_uid,body.output.project_uid); 
                 }
                 else
                 {
-                    dbg.message("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Resume is not available",4);
+                    logger.debug("<EXPERIMENTAL>"+ "Skipped [" + body.output.uid + "]. Resume is not available");
                 }
 
             } 
         }
         else{
 
-            dbg.message("<EXPERIMENTAL>"+ "Not able to find monitor entry",1);
+            logger.error("<EXPERIMENTAL>"+ "Not able to find monitor entry");
         }
     }
     else
     {
-        dbg.message("<EXPERIMENTAL>"+"Failed to get Monitor entry",1)
-        dbg.message(JSON.stringify(body),1);
+        logger.fatal("<EXPERIMENTAL>"+"Failed to get Monitor entry")
+        console.log(JSON.stringify(body));
         process.exit(99);
     }
 }
@@ -696,12 +696,12 @@ function processListResponse(url,err,body,res){
         //... do something next      
         if(body.output.count==0)
         {
-            dbg.message("<EXPERIMENTAL>"+"No Workflows To Resubmit",3);
+            logger.warn("<EXPERIMENTAL>"+"No Workflows To Resubmit");
             process.exit(0);
         }
         else{
 
-            dbg.message("<EXPERIMENTAL>"+"Workflow Instances To Resubmit [" + body.output.logs.length + " of " + body.output.count + "]",3);
+            logger.info("<EXPERIMENTAL>"+"Workflow Instances To Resubmit [" + body.output.logs.length + " of " + body.output.count + "]");
             for(var i=0;i<body.output.logs.length;i++)
             {
                 processSingleResubmission(i,body.output.logs.length,body.output.logs[i].uid);
@@ -711,9 +711,9 @@ function processListResponse(url,err,body,res){
     }
     else
     {
-        dbg.message("<EXPERIMENTAL>"+"Failed to get Running Workflows",1)
-        if(body!=null)dbg.message(JSON.stringify(body),1);
-        if(err!=null)dbg.message(JSON.stringify(err),2);
+        logger.error("<EXPERIMENTAL>"+"Failed to get Running Workflows")
+        if(body!=null)logger.fatal(JSON.stringify(body));
+        if(err!=null)console.log(JSON.stringify(err));
         process.exit(99);
     }
 }
@@ -722,69 +722,69 @@ function processRunningResponse(url,err,body,res){
     if(res.status==200){
         //... do something next      
         if(body.output.count==0){
-            dbg.message("<EXPERIMENTAL>"+"No Workflows Running",3)
-            dbg.message("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
+            logger.info("<EXPERIMENTAL>"+"No Workflows Running")
+            logger.info("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
         }
         else{
-            dbg.message("<EXPERIMENTAL>"+"Workflows Running [" +body.output.count + "]",3)
+            logger.info("<EXPERIMENTAL>"+"Workflows Running [" +body.output.count + "]")
             if(body.output.count<maxRunningWorkflows){
-                dbg.message("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions",3);
+                logger.info("<EXPERIMENTAL>"+"Can Resubmit [" + (maxRunningWorkflows - body.output.count) + "] executions");
             }
             else{
-                dbg.message("<EXPERIMENTAL>"+"Maximum Workflow Executions Currently in progress - exiting",2);
+                logger.warn("<EXPERIMENTAL>"+"Maximum Workflow Executions Currently in progress - exiting");
                 process.exit(0);
             }
         }
         processResubmissions(100, maxRunningWorkflows - body.output.count);
     }
     else{
-        dbg.message("<EXPERIMENTAL>"+"Failed to get Running Workflows",1)
-        if(body!=null)dbg.message(JSON.stringify(body),1);
-        if(err!=null)dbg.message(JSON.stringify(err),2);
+        logger.fatal("<EXPERIMENTAL>"+"Failed to get Running Workflows")
+        if(body!=null)logger.error(JSON.stringify(body));
+        if(err!=null)console.log(JSON.stringify(err));
         process.exit(99);
     }
 }
 
 function doMessagingCreate()
 {
-    debug("Messaging Item Creation")
+    logger.debug("Messaging Item Creation")
     var endPoint = "https://" +domainName + "/integration/rest/messaging/admin/destinations?projectName=" + projectId + "&type=" + queueOrTopic;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var body;
     if(queueOrTopic=="queue")body={"queueName":messagingName};
     else if (queueOrTopic=="topic")body={"topicName":messagingName}
-    else dbg.message("<EXPERIMENTAL>"+"Please provide either 'queue' or 'topic'",1);
+    else logger.fatal("<EXPERIMENTAL>"+"Please provide either 'queue' or 'topic'");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,headers,true,false);  
 }
 
 function processSubscriberState()
 {
-    debug("Messaging Subscriber State Change: " + subscriberState);
+    logger.debug("Messaging Subscriber State Change: " + subscriberState);
     var endPoint = "https://" +domainName + "/integration/rest/messaging/subscribers/" + subscriberName + "?projectName=" + projectId + "&prop=state&value=" + subscriberState + "&force=false";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"PATCH",processResponse,headers,true,false);  
 }
 
 function doMessagingDelete()
 {
-    debug("Messaging Item Deletion")
+    logger.debug("Messaging Item Deletion")
     var endPoint = "https://" +domainName + "/integration/rest/messaging/admin/destinations/" + messagingName + "?projectName=" + projectId + "&type=" + queueOrTopic;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var body;
     if(queueOrTopic=="queue")body={"queueName":messagingName};
     else if (queueOrTopic=="topic")body={"topicName":messagingName}
-    else dbg.message("<EXPERIMENTAL>"+"Please provide either 'queue' or 'topic'",1);
+    else logger.fatal("<EXPERIMENTAL>"+"Please provide either 'queue' or 'topic'");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,60,body,undefined,"DELETE",processResponse,headers,true,false);  
 }
 
 function getMessagingStats()
 {
-    debug("Messaging Stats");
+    logger.debug("Messaging Stats");
     var endPoint = "https://" +domainName + "/integration/rest/messaging/runtime/destinations/"+messagingName+"/metrics?projectName=" + projectId ;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     var body;
     rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"GET",processResponse,headers,true,false);  
@@ -794,7 +794,7 @@ function getLogs()
 {
     debugMonitorInfo();
     var endPoint = "https://" + domainName + "/enterprise/v1/metrics/workflowexecutions/logs";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var body=processMonitorBody();
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,headers,true,false);  
@@ -803,9 +803,9 @@ function getLogs()
 
 function searchProjectsByName()
 {
-    dbg.message("<EXPERIMENTAL>"+"Search Projects By Name [" + projectName + "]",4);
+    logger.debug("<EXPERIMENTAL>"+"Search Projects By Name [" + projectName + "]");
     var endPoint = "https://" + domainName + "/enterprise/v1/projects?limit=" + returnCount+ "&skip=" + returnStart + "&q=" + projectName;
-    dbg.message("<EXPERIMENTAL>"+"Next URL [" + endPoint + "]",4);
+    logger.debug("<EXPERIMENTAL>"+"Next URL [" + endPoint + "]");
     var headers = setHeaders();
 
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);  
@@ -813,27 +813,27 @@ function searchProjectsByName()
 
 function getProjectDeployments()
 {
-    dbg.message("<EXPERIMENTAL>"+"Executing Project Deployments call",4);
+    logger.debug("Executing Project Deployments call");
     var endPoint = "https://" + domainName + "/enterprise/v1/deployments";
-    dbg.message("<EXPERIMENTAL>"+"Next URL [" + endPoint + "]",4);
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);   
 }
 
 function stageInfo()
 {
-    debug("Stage Info");
+    logger.debug("Stage Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/stages?allRegion=false";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);   
 }
 
 function getProjectAccountConfigInfo()
 {
-    debug("Project Account Config Info");
+    logger.debug("Project Account Config Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/configdata";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);  
 }
@@ -841,9 +841,9 @@ function getProjectAccountConfigInfo()
 
 function usedConnectorAccountsInfo()
 {
-    debug("Used Connectors Info");
+    logger.debug("Used Connectors Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/user/auths";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);  
 }
@@ -851,9 +851,9 @@ function usedConnectorAccountsInfo()
 function projectWorkflowsInfo()
 {
 
-    debug("Project Workflows Info");
+    logger.debug("Project Workflows Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/flows?limit=" + returnCount+ "&skip=" + returnStart + "&filter=recent&tags=&query=";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processProjectsResponse,headers,true,false);   
 }
@@ -861,9 +861,9 @@ function projectWorkflowsInfo()
 function projectFlowServicesInfo()
 {
 
-    debug("Project FlowServices Info");
+    logger.debug("Project FlowServices Info");
     var endPoint = "https://" + domainName + "/integration/rest/ut-flow/flow-metadata/" + projectId + "?limit=" + returnCount+ "&skip=" + returnStart;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);   
 }
@@ -871,9 +871,9 @@ function projectFlowServicesInfo()
 
 function execUserInfo()
 {
-    debug("<EXPERIMENTAL>"+"Exec User Info");
+    logger.debug("<EXPERIMENTAL>"+"Exec User Info");
     var endPoint = "https://" + domainName + "/enterprise/v1/user";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);   
 }
@@ -881,7 +881,7 @@ function execUserInfo()
 /** Logs in via Software AG Cloud! */
 function loginPhase1()
 {    
-    debug("LOGIN Phase 1")
+    logger.debug("LOGIN Phase 1")
     var endPoint = url + "/integration/sagcloud/";
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",loginResponse,undefined,true,false);
     
@@ -889,18 +889,18 @@ function loginPhase1()
 
 function loginPhase2()
 {   
-    debug("LOGIN Phase 2")
+    logger.debug("LOGIN Phase 2")
     var endPoint = nextUrl;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
     formUrl = endPoint;
     rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",loginResponse,undefined,false,false);   
 }
 
 function loginPhase3()
 {
-    debug("LOGIN Phase 3")
+    logger.debug("LOGIN Phase 3")
     var endPoint = nextUrl;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
 
     var headers = [
         {name:"Referer",value:formUrl},
@@ -932,9 +932,9 @@ function loginPhase3()
 
 function loginRedirectPhase(inId)
 {
-    debug("LOGIN (Redirect) Phase " + inId);
+    logger.debug("LOGIN (Redirect) Phase " + inId);
     var endPoint = nextUrl;
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
 
     var headers = [
         {name:"Accept",value:"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
@@ -944,9 +944,9 @@ function loginRedirectPhase(inId)
 
 function loginUserPhase(inId)
 {
-    debug("LOGIN (USER) Phase " + inId);
+    logger.debug("LOGIN (USER) Phase " + inId);
     var endPoint = "https://" + domainName + "/enterprise/v1/user";
-    debug("Next URL [" + endPoint + "]");
+    logger.debug("Next URL [" + endPoint + "]");
 
     var headers = [
         {name:"authtoken",value:authtoken},
@@ -957,33 +957,33 @@ function loginUserPhase(inId)
 
 function checkResponse(res,body)
 {
-    debug("Response Status Code =" + res.status);
+    logger.debug("Response Status Code =" + res.status);
     if(res.status == 302){
         //nextUrl = res.headers.location;
         nextUrl = res.headers.raw()['location'];
-        debug("Redirect URL [" + nextUrl + "]");
+        logger.debug("Redirect URL [" + nextUrl + "]");
         return;
     }
 
     if(res.status == 200){
-        debug(body);
+        logger.debug(body);
         return;
     }
 
     if(res.status == 400 || res.status == 404 || res.status == 500 || res.status == 502 || res.status == 403 || res.status == 401)
     {
-        dbg.message("Failed to login via Software AG Cloud - exiting",4)
-        dbg.message(res,4);   
+        logger.debug("Failed to login via Software AG Cloud - exiting");
+        console.log(res);   
         process.exit(99);
     }
 }
 
 function checkPhase3Response(res,body)
 {
-    debug("Response Status Code =" + res.status);
+    logger.debug("Response Status Code =" + res.status);
     if(res.status == 302){
         nextUrl = res.headers.raw()['location'];
-        debug("Redirect URL [" + nextUrl + "]");
+        logger.debug("Redirect URL [" + nextUrl + "]");
     }
 
     if(res.status == 200){
@@ -995,16 +995,15 @@ function checkPhase3Response(res,body)
 
         error ={}
         error.message = err;
-        dbg.message("Failed to login via Software AG Cloud [" + err + "] - exiting",4)
-        dbg.message(JSON.stringify(error),4);
-        
+        logger.warn("Failed to login via Software AG Cloud [" + err + "] - exiting")
+        console.log(JSON.stringify(error));
         process.exit(401);
     }
 
     if(res.status == 400 || res.status == 404 || res.status == 500 || res.status == 502 || res.status == 403 || res.status == 401)
     {
-        dbg.message("Failed to login via Software AG Cloud - exiting",4)
-        dbg.message(res,4);   
+        logger.warn("Failed to login via Software AG Cloud - exiting")
+        console.log(res);   
         process.exit(99);
     }
 }
@@ -1033,15 +1032,15 @@ function processProjectsResponse(url,err,body,res){
 
         
         if(prettyprint==true){
-            dbg.message(JSON.stringify(output,null,4),-1);
+            console.log(JSON.stringify(output,null,4));
         }
         else{
-            dbg.message((JSON.stringify(output)),-1);
+            console.log((JSON.stringify(output)));
         }        
     }
     else
     {
-        dbg.message("Failed to login via Software AG Cloud - exiting",4)
+        logger.warn("Failed to login via Software AG Cloud - exiting")
         process.exit(99);
     }
 }
@@ -1050,17 +1049,16 @@ function processResponse(url,err,body,res){
     if(res.status==200)
     {
         if(prettyprint==true){
-            dbg.message(JSON.stringify(body,null,4),-1);
+            console.log(JSON.stringify(body,null,4));
         }
         else{
-            dbg.message((JSON.stringify(body)),-1);
+            console.log((JSON.stringify(body)));
         }        
     }
     else
     {
-        //dbg.message("Failed to login via Software AG Cloud - exiting",4)
-        if(body!==null)dbg.message((JSON.stringify(body)),-1);
-        else dbg.message("Failed to login via Software AG Cloud - exiting",4)
+        if(body!==null)console.log((JSON.stringify(body)));
+        else logger.warn("Failed to login via Software AG Cloud - exiting");
         process.exit(99);
     }
 }
@@ -1072,14 +1070,14 @@ function processUserResponse(url,err,body,res){
     }
     else
     {
-        debug("Failed to login via Software AG Cloud - exiting")
+        logger.warn("Failed to login via Software AG Cloud - exiting")
         process.exit(99);
     }
 
     //Now run the final call
-    dbg.message("<EXPERIMENTAL>Logged in",3);
+    logger.info("<EXPERIMENTAL>Logged in");
     if(finalCall!==undefined)finalCall();
-    else dbg.message("No final call set",4);
+    else logger.error("No final call set");
     
 }
 
@@ -1091,18 +1089,18 @@ function loginResponse(url,err,body,res){
 
     //Check on origin to determine action
     var origin = domainName + "/integration/sagcloud/";
-    debug("Origin was [" + origin + "]");
-    debug("On stage: " +loginStageCounter );
+    logger.debug("Origin was [" + origin + "]");
+    logger.debug("On stage: " +loginStageCounter );
     switch(loginStageCounter)
     {
         case 1:
-            debug("Phase 1");
+            logger.debug("Phase 1");
             checkResponse(res,body);
             nextCall = loginPhase2();
             break;
 
         case 2:
-            debug("Phase 2");
+            logger.debug("Phase 2");
             checkResponse(res,body);
 
             //Parse Next URL from HTML Form
@@ -1116,35 +1114,35 @@ function loginResponse(url,err,body,res){
             break;
 
         case 3:
-            debug("Phase 3");
+            logger.debug("Phase 3");
             checkPhase3Response(res,body);
             nextCall = loginRedirectPhase(4);
             break;
 
         case 4:
-            debug("Phase 4");
+            logger.debug("Phase 4");
             checkResponse(res,body);
             nextCall = loginRedirectPhase(5);
             break; 
         case 5:
-            debug("Phase 5");
+            logger.debug("Phase 5");
             checkResponse(res,body);
             nextCall = loginRedirectPhase(6);
             break;    
         case 6:
-            debug("Phase 6");
+            logger.debug("Phase 6");
             checkResponse(res,body);
-            debug("checked response - processing nextUrl");
+            logger.debug("checked response - processing nextUrl");
             var workOn = nextUrl.toString();
-            debug("Next URL is: [" + workOn + "]");
-            debug(workOn.indexOf('/#/sso/success'));        
+            logger.debug("Next URL is: [" + workOn + "]");
+            logger.debug(workOn.indexOf('/#/sso/success'));        
             if(workOn.indexOf('/#/sso/success')==0)
             {
-                debug("Getting Authtoken details");
+                logger.debug("Getting Authtoken details");
                 authtoken = workOn.split("?sid=")[1].split("&")[0];
                 uid = workOn.split("&tenant_uid=")[1];
-                debug("authtoken [" + authtoken +"]");
-                debug("tenantuid [" + uid +"]");
+                logger.debug("authtoken [" + authtoken +"]");
+                logger.debug("tenantuid [" + uid +"]");
                 nextCall=loginUserPhase(7);
             }
 
@@ -1155,7 +1153,7 @@ function loginResponse(url,err,body,res){
     //Invoke next call in chain
     if(nextCall!==undefined)
     {
-        debug("Found target call... initiating");
+        logger.debug("Found target call... initiating");
         nextCall();
     }
     
