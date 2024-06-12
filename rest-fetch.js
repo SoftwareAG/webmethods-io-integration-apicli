@@ -37,6 +37,10 @@ function error(message){
 
 function addAllCookies(res,domainName){
     domain = domainName;
+    if(res===undefined || res ===null || res.headers===undefined||res.headers==null){
+        logger.warn("No Response/Heaaders found");
+        return;
+    }
     const setCookieHeaders = res.headers.raw()['set-cookie'];
     // console.log("res--->");
     // console.log(res);
@@ -85,7 +89,7 @@ function displayCookies()
 function enableProxy(options){
     if(proxy)
     {
-        info("Enabling Proxy");
+        info("Enabling Proxy: " + proxy);
         //options.proxy = proxy;
         proxyAgent = new HttpsProxyAgent(proxy)
         options.agent = proxyAgent;
@@ -285,9 +289,9 @@ function del(restEndPoint,user,pass,timeout,data,callback){
 
 
 async function custom(restEndPoint,user,pass,timeout,jsonBody,formBody,type,callback,headers,jsonFlag,redirect,filename,formObject){
-    info("FETCH Custom REST call Started");
-    
-    //debug("User: " + user);
+    info("FETCH Custom REST call Started [" + restEndPoint + "]");
+    debug("Type [" + type + "]");
+
     var options = {
         url: restEndPoint,
         method: type,
@@ -385,12 +389,13 @@ async function custom(restEndPoint,user,pass,timeout,jsonBody,formBody,type,call
 
     if(cookieStr.length>0)options.headers['Cookie']= cookieStr;
 
-    //debug("Options\n " + JSON.stringify(options) + "\n -----");
+    debug("Options [\n " + JSON.stringify(options) + "\n ]");
     var response;
     var data;
-    var err=undefined;
-    try{
+    var err=undefined;    try{
+        debug("Making call to Endpoint [" + restEndPoint + "]");
         response = await fetch(restEndPoint,options);
+
         // Check if the response has a Content-Type header
         const contentType = response.headers.get('Content-Type');
         if (contentType && contentType.includes('application/json')) {
@@ -411,7 +416,6 @@ async function custom(restEndPoint,user,pass,timeout,jsonBody,formBody,type,call
     finally{
         //Implement if needed
     }
-    
     return callback(restEndPoint,err,data,response,filename);
 }
 

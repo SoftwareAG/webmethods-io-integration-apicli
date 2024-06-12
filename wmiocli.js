@@ -820,6 +820,22 @@ program.command('experimental-user', { hidden: hideExperimental })
     experimental.user();
   });
 
+  program.command('experimental-user-list [username]', { hidden: hideExperimental })
+  .description('Get list of users from integration, or for a single user with the given username')
+  .action((username) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.getUserList(username);
+  })  
+
+  program.command('experimental-user-delete <username>', { hidden: hideExperimental })
+  .description('Deletes a user from integration only')
+  .action((username) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.deleteUser(username);
+  })     
+
 program.command('experimental-stages', { hidden: hideExperimental })
   .description('Get Stage information')
   .action(() => {
@@ -1000,6 +1016,7 @@ program.command('experimental-flowservice-http <project-id> <flowservice-id> <en
     experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
     experimental.flowserviceDetails(projectId,"false");
   })  
+ 
 
 program.parse();
 

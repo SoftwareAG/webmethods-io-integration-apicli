@@ -19,7 +19,9 @@ var url;
 
 var authtoken="";
 var uid="";
+var userUid = "";
 var csrf="";
+var filterUsername="";
 var projectId;
 var workflowId;
 var projectName ;
@@ -71,10 +73,6 @@ function generateUUID(){
     return guidstring;
 }
 
-function debug(message){
-    logger.debug("<EXPERIMENTAL> " + message);
-}
-
 function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     
     logger.warn("EXPERIMENTAL/UNSUPPORTED APIs - USE THESE AT YOUR OWN RISK");
@@ -90,12 +88,44 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
 }
 
 
+function getUserList(inUsername)
+{
+    filterUsername = inUsername;
+    finalCall = getUsers;
+    loginPhase1();
+}
+
+function deleteUser(inUid)
+{
+    userUid = inUid
+    finalCall = deleteIntegrationUser;
+    loginPhase1();
+}
+
 function flowserviceDetails(inProjectId,includeEdgeFlows)
 {
     projectId = inProjectId;
     incEdgeFlows = includeEdgeFlows
     finalCall = processflowDetails;
     loginPhase1();
+}
+
+function deleteIntegrationUser()
+{
+    logger.debug("Deleting Integration User [" + userUid + "]");
+    var endPoint = "https://" +domainName + "/enterprise/v1/users/" + userUid;
+    var body;
+    logger.debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders(true);
+    headers.push({name:"Accept", value:"application/json, text/plain, */*"});
+    headers.push({name:"accept-encoding", value:"gzip, deflate, br"});
+    headers.push({name:"content-type", value:"application/json"});
+    headers.push({name:"Connection", value:"keep-alive"});
+    headers.push({name:"DNT", value:"1"});
+    headers.push({name:"Cache-Control", value:"no-cache"});
+    headers.push({name:"Origin",value:"https://" +domainName});   
+    headers.push({name:"Referer",value:"https://" +domainName + "/"});  
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"DELETE",processResponse,headers,true,false);  
 }
 
 function processflowDetails()
@@ -166,6 +196,16 @@ function flowserviceScheduler(inFlowServiceId, inScheduleStatus, inProjectId)
     projectId = inProjectId;
     finalCall = processScheduleStatus;
     loginPhase1();
+}
+
+function getUsers()
+{
+    logger.debug("Getting Integration User [" + username + "]");
+    var endPoint = "https://" +domainName + "/enterprise/v1/tenant/users";
+    logger.debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    var body;
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"GET",processUserListResponse,headers,true,false);  
 }
 
 function processScheduleStatus()
@@ -355,15 +395,19 @@ function processMonitorBody()
     return body;
 }
 
-function setHeaders()
+function setHeaders(omitAccept)
 {
     var headers = [
         {name:"authtoken",value:authtoken},
-        {name:"accept",value:"application/json"},
         {name:"X-Requested-With",value:"XMLHttpRequest"},
         {name:"X-Request-ID",value:generateUUID()},
         {name:"x-csrf-token",value:csrf},        
     ];
+
+    if(omitAccept===undefined || omitAccept===null || omitAccept==false){
+        headers.push({name:"accept",value:"application/json"});
+    }
+
     if(projectId!==undefined && projectId!==null && projectId.length>0)
     {
         headers.push({name:"Project_uid",value:projectId});
@@ -1046,6 +1090,9 @@ function processProjectsResponse(url,err,body,res){
 }
 
 function processResponse(url,err,body,res){
+    if(err!==undefined && err!==null)logger.error(err);
+    logger.debug("HTTP Response Status [" + res.status + "]");
+    logger.debug("HTTP Resposne Status Text [" + res.statusText + "]");
     if(res.status==200)
     {
         if(prettyprint==true){
@@ -1062,6 +1109,45 @@ function processResponse(url,err,body,res){
         process.exit(99);
     }
 }
+
+
+function processUserListResponse(url,err,body,res){
+    
+    if(res.status==200)
+    {
+        var jsonObj={};
+        jsonObj.output={};
+        if(filterUsername!==undefined && filterUsername !== null && filterUsername.length>0){
+            //Filter down to the right user
+            //console.log("**********" + body.output.objects[0].wmic_username);
+            for(var j=0;j<body.output.objects.length;j++){
+                if(body.output.objects[j].wmic_username==filterUsername){
+                    var objects=[];
+                    objects.push(body.output.objects[j]);
+                    jsonObj.output.objects=objects;
+                    break;
+                }
+            }
+        }
+        else{
+            jsonObj = body;
+        }
+
+        if(prettyprint==true){
+            console.log(JSON.stringify(jsonObj,null,4));
+        }
+        else{
+            console.log((JSON.stringify(jsonObj)));
+        }        
+    }
+    else
+    {
+        if(jsonObj!==null)console.log((JSON.stringify(jsonObj)));
+        else logger.warn("Failed to login via Software AG Cloud - exiting");
+        process.exit(99);
+    }
+}
+
 
 function processUserResponse(url,err,body,res){
     if(res.status==200)
@@ -1163,7 +1249,8 @@ function loginResponse(url,err,body,res){
 
 
 module.exports = {init, help,
-    user,stages,
+    user,getUserList,deleteUser,
+    stages,
     searchProject,
     projectDeployments,
     projectWorkflows,projectFlowservices,
