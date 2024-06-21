@@ -24,6 +24,7 @@ var csrf="";
 var filterUsername="";
 var projectId;
 var workflowId;
+var enableFlag;
 var projectName ;
 var executionStatus;
 var startDate;
@@ -33,6 +34,7 @@ var queueOrTopic;
 var messagingName;
 var subscriberName;
 var subscriberState;
+var subscriberJson;
 var nextUrl,formUrl;
 var finalCall;
 var loginStageCounter = 0;
@@ -48,6 +50,12 @@ var scheduleStatus;
 var optionEnable;
 var flowOptionType;
 var incEdgeFlows;
+var runtime={};
+runtime.limit=20;
+runtime.page=1;
+runtime.search="";
+runtime.id="";
+runtime.instanceId="";
 
 
 const maxRunningWorkflows = 20;
@@ -85,6 +93,65 @@ function init(inDomainName, inUsername, inPassword,inTimeout,inPrettyprint){
     logger.debug("<EXPERIMENTAL>Username [" + username + "]");
     logger.debug("<EXPERIMENTAL>URL      [" + url + "]");
     logger.debug("<EXPERIMENTAL>Timeout  [" + timeout + "]");
+}
+
+function pingRuntime(id,instanceId){
+    runtime.id=id;
+    runtime.instanceId=instanceId;
+    finalCall = doPingEdgeRuntimes;
+    loginPhase1();
+}
+
+function runtimeStatus(id,instanceId){
+    runtime.id=id;
+    runtime.instanceId=instanceId;
+    finalCall = doRuntimeStatus;
+    loginPhase1();
+}
+
+function doRuntimeStatus(){
+
+    var body={"apiEndPoint":"/dashboard/current","agentID":runtime.id,"agentGroup":"Default","httpMethod":"GET","headers":{"X-wM-AdminUI":true,"Content-Type":"application/json"},"instanceID":runtime.instanceId};
+    var endPoint = "https://" +domainName + "/integration/rest/edge/flow/admin-proxy/";
+
+    var headers = setHeaders();
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,headers,true,false);     
+}
+
+function doPingEdgeRuntimes(){
+
+    var endPoint = "https://" +domainName + "/integration/rest/edge/runtimes/" + runtime.id + "/instances/" + runtime.instanceId + "/ping";
+    if(runtime.search.length>0)endPoint+="&searchKey=" + runtime.search;
+
+    var headers = setHeaders();
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);     
+}
+
+
+
+function getRuntimeList(limit,page,searchTerm)
+{
+    runtime.limit = limit;
+    runtime.page = page;
+    runtime.search = searchTerm;    
+    if(limit===undefined||limit===null||limit.length==0)runtime.limit="100";
+    if(page===undefined||page===null||page.length==0)runtime.page="1";
+    if(searchTerm===undefined||searchTerm===null||searchTerm.length==0)runtime.search="";
+
+    finalCall = listRuntimes;
+    loginPhase1();
+}
+
+function listRuntimes(){
+    logger.debug("Listing runtimes [" + userUid + "]");
+    //https://wmintanywhere.int-aw-au.webmethods.io/integration/rest/edge/runtimes?page=1&limit=19&searchKey=dave
+
+    var endPoint = "https://" +domainName + "/integration/rest/edge/runtimes";
+    endPoint+="?page=" + runtime.page + "&limit=" + runtime.limit;
+    if(runtime.search.length>0)endPoint+="&searchKey=" + runtime.search;
+
+    var headers = setHeaders();
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);  
 }
 
 
@@ -285,15 +352,32 @@ function getMonitorInfo(inExecutionStatus,inStartDate,inEndDate,inProjectId,inWo
     loginPhase1();
 }
 
+function enableDisableWorkflow(inProjectId, inWorkflowId,inEnableFlag)
+{
+    projectId = inProjectId;
+    workflowId = inWorkflowId;
+    enableFlag = inEnableFlag;
+    finalCall = setworkflowStatus;
+    loginPhase1();
+}
+
+function getWorkflowDetail(inProjectId, inWorkflowId)
+{
+    projectId = inProjectId;
+    workflowId = inWorkflowId;
+    finalCall = getWorkflow;
+    loginPhase1();
+}
+
 function messagingSubscriberEnable(inProjectId,inSubscriberName){
-    messagingSubscriber(inProjectId,inSubscriberName,"ENABLED")
+    messagingSubscriberState(inProjectId,inSubscriberName,"ENABLED")
 }
 
 function messagingSubscriberDisable(inProjectId,inSubscriberName){
-    messagingSubscriber(inProjectId,inSubscriberName,"DISABLED")
+    messagingSubscriberState(inProjectId,inSubscriberName,"DISABLED")
 }
 
-function messagingSubscriber(inProjectId,inSubscriberName,state){
+function messagingSubscriberState(inProjectId,inSubscriberName,state){
     logger.debug("Starting subscriber state change");
     projectId = inProjectId;
     subscriberName = inSubscriberName;
@@ -325,6 +409,28 @@ function messagingStats(inProjectId,inMessagingName)
     projectId = inProjectId;
     messagingName = inMessagingName;
     finalCall = getMessagingStats;
+    loginPhase1();
+}
+
+function messagingSubscriber(inProjectId,inSubscriberName)
+{
+    projectId = inProjectId;
+    subscriberName = inSubscriberName;
+    finalCall = getMessagingSubscriber;
+    loginPhase1();
+}
+
+function messagingCreateSubscriber(inProjectId,inSubscriberJson){
+    projectId = inProjectId;
+    subscriberJson = inSubscriberJson;
+    finalCall = addNewMessagingSubscriber;
+    loginPhase1();
+}
+
+function messagingDeleteSubscriber(inProjectId,inSubscriberName){
+    projectId = inProjectId;
+    subscriberName = inSubscriberName;
+    finalCall = deleteMessagingSubscriber;
     loginPhase1();
 }
 
@@ -824,6 +930,46 @@ function doMessagingDelete()
     rest_fetch.custom(endPoint,undefined,undefined,60,body,undefined,"DELETE",processResponse,headers,true,false);  
 }
 
+function addNewMessagingSubscriber()
+{
+    //projectId
+    //subscriberJson
+    logger.debug("Create Messaging Subscriber");
+    logger.debug("JSON is: " + subscriberJson);
+
+    var endPoint = "https://" +domainName + "/enterprise/v1/messaging/subscriber"
+    endPoint += "?projectName=" + projectId ;
+    logger.debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    var subscr = JSON.parse(subscriberJson);
+    subscr.status=undefined;
+    var body = {};
+    body.subscriber={};
+    body.subscriber=subscr;
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,headers,true,false);  
+}
+
+function getMessagingSubscriber()
+{
+   
+    logger.debug("Messaging Subscriber");
+    var endPoint = "https://" +domainName + "/integration/rest/messaging/subscribers"
+    if(subscriberName!==undefined&&subscriberName!==null&&subscriberName.length>0)endPoint +="/" + subscriberName;
+    endPoint += "?projectName=" + projectId ;
+    logger.debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);  
+}
+
+function deleteMessagingSubscriber()
+{
+    logger.debug("Messaging Subscriber");
+    var endPoint = "https://" +domainName + "/enterprise/v1/messaging/subscriber?subscriberName=" +subscriberName + "&projectName=" + projectId
+    logger.debug("Next URL [" + endPoint + "]");
+    var headers = setHeaders();
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"DELETE",processResponse,headers,true,false);  
+}
+
 function getMessagingStats()
 {
     logger.debug("Messaging Stats");
@@ -842,6 +988,29 @@ function getLogs()
     var body=processMonitorBody();
     var headers = setHeaders();
     rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"POST",processResponse,headers,true,false);  
+}
+
+function setworkflowStatus()
+{
+    logger.debug("Setting workflow Status");
+    var endPoint = "https://" + domainName + "/enterprise/v1/flows/" + workflowId + "/toggle";
+    logger.debug("Next URL [" + endPoint + "]");
+    var body={};  
+    body.data=enableFlag;
+    logger.debug("Data is: " + JSON.stringify(body));
+    var headers = setHeaders();
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,body,undefined,"PUT",processResponse,headers,true,false);  
+}
+
+function getWorkflow()
+{
+    logger.debug("Getting workflow detail");
+    var endPoint = "https://" + domainName + "/enterprise/v1/flows/" + workflowId ;
+    logger.debug("Next URL [" + endPoint + "]");
+    //var body={};  
+    //body.data=enableFlag;
+    var headers = setHeaders();
+    rest_fetch.custom(endPoint,undefined,undefined,timeout,undefined,undefined,"GET",processResponse,headers,true,false);  
 }
 
 
@@ -1231,7 +1400,6 @@ function loginResponse(url,err,body,res){
                 logger.debug("tenantuid [" + uid +"]");
                 nextCall=loginUserPhase(7);
             }
-
     }
 
 
@@ -1255,7 +1423,9 @@ module.exports = {init, help,
     projectDeployments,
     projectWorkflows,projectFlowservices,
     connectorAccounts,getProjectAccountConfig,
-    getMonitorInfo,workflowResubmit,
-    messagingCreate,messagingStats,messagingDelete, messagingSubscriber,
-    vbidAnalysis, flowserviceScheduler,flowserviceOption,flowserviceDetails};
+    getMonitorInfo,workflowResubmit,enableDisableWorkflow,getWorkflowDetail,
+    messagingCreate,messagingStats,messagingDelete, messagingSubscriberState,messagingSubscriber,messagingCreateSubscriber,messagingDeleteSubscriber,
+    vbidAnalysis, flowserviceScheduler,flowserviceOption,flowserviceDetails,
+    getRuntimeList,pingRuntime,runtimeStatus
+};
     

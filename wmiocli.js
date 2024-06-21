@@ -892,6 +892,28 @@ program.command('experimental-project-deployments <project-id>', { hidden: hideE
     experimental.projectDeployments(projectId);
   });
 
+  program.command('experimental-workflow-execution-analysis <vbid> [format]', { hidden: hideExperimental })
+  .description('Provide workflow exedcution analysis')
+  .action((vbid, format) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.vbidAnalysis(vbid, format);
+  })
+
+  program.command('experimental-workflow-enabled [project-id] [workflow-id] [enabled]', { hidden: hideExperimental })
+  .description('Enables/Disables an inidividual workflow')
+  .action((projectId, workflowId, enabled) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    if(enabled.toLowerCase()=="true")enabled=true;
+    else if(enabled.toLowerCase()=="false")enabled=false;
+    else {
+      console.error("Enabled must be set to true or false");
+      return;
+    }
+    experimental.enableDisableWorkflow(projectId, workflowId, enabled);
+  })
+
 program.command('experimental-workflow-monitor [execution-status] [start-date] [end-date] [project-id] [workflow-id]', { hidden: hideExperimental })
   .description('List Workflow Monitor')
   .action((executionStatus, startDate, endDate, projectId, workflowId) => {
@@ -907,6 +929,15 @@ program.command('experimental-workflow-resubmit [restart-or-resume] [start-date]
     experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
     experimental.workflowResubmit(restartOrResume, startDate, endDate, projectId, workflowId);
   });
+
+program.command('experimental-workflow [project-id] [workflow-id]', { hidden: hideExperimental })
+  .description('Get workflow details')
+  .action((projectId,workflowId) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.getWorkflowDetail(projectId,workflowId);
+  });
+
 
 program.command('experimental-messaging-create <queue-or-topic> <name> <project-id>', { hidden: hideExperimental })
   .description('Create a messaging queue or topic')
@@ -932,22 +963,37 @@ program.command('experimental-messaging-stats <name> <project-id>', { hidden: hi
     experimental.messagingStats(projectId, name);
   });
 
-program.command('experimental-messaging-subscriber <subscriber-name> <subscriber-status> <project-id>', { hidden: hideExperimental })
+program.command('experimental-messaging-subscriber-state <subscriber-name> <subscriber-status> <project-id>', { hidden: hideExperimental })
   .description('Set Subscriber Status')
   .action((subscriberName, subscriberStatus, projectId) => {
     checkOptions();
     experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
-    experimental.messagingSubscriber(projectId, subscriberName, subscriberStatus);
-  });
+    experimental.messagingSubscriberState(projectId, subscriberName, subscriberStatus);
+});
 
-program.command('experimental-workflow-execution-analysis <vbid> [format]', { hidden: hideExperimental })
-  .description('Provide workflow exedcution analysis')
-  .action((vbid, format) => {
+program.command('experimental-messaging-subscriber <project-id> [subscriber-name]', { hidden: hideExperimental })
+  .description('Get Messaging Subscriber(s)')
+  .action((projectId,subscriberName) => {
     checkOptions();
     experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
-    experimental.vbidAnalysis(vbid, format);
-  })
+    experimental.messagingSubscriber(projectId, subscriberName);
+});
 
+program.command('experimental-messaging-subscriber-delete <project-id> <subscriber-name>', { hidden: hideExperimental })
+  .description('Get Messaging Subscriber(s)')
+  .action((projectId,subscriberName) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.messagingDeleteSubscriber(projectId, subscriberName);
+});
+
+program.command('experimental-messaging-subscriber-create <project-id> <subscriber-json>', { hidden: hideExperimental })
+  .description('Create a messaging Subscriber')
+  .action((projectId,subscriberJson) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.messagingCreateSubscriber(projectId, subscriberJson);
+});
 
 program.command('experimental-flowservice-scheduler <project-id> <flowservice-id> <schedule-status>', { hidden: hideExperimental })
   .description('Enable/Disable FlowService Schedules')
@@ -1015,7 +1061,40 @@ program.command('experimental-flowservice-http <project-id> <flowservice-id> <en
     checkOptions();
     experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
     experimental.flowserviceDetails(projectId,"false");
-  })  
+  }) 
+  
+  program.command('experimental-runtimes [limit] [page]', { hidden: hideExperimental })
+  .description('Gets a list of runtimes')
+  .action((limit, page) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.getRuntimeList(limit,page,undefined);
+  })
+
+  program.command('experimental-runtimes-search <name> [limit] [page]', { hidden: hideExperimental })
+  .description('Searches for runtimes with a given name')
+  .action((name, limit, page) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.getRuntimeList(limit,page,name);
+  })
+
+  program.command('experimental-runtimes-ping <id> <instance-id>', { hidden: hideExperimental })
+  .description('Ping a runtime')
+  .action((id, instanceId) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.pingRuntime(id,instanceId);
+  })
+
+  program.command('experimental-runtimes-status <id> <instance-id>', { hidden: hideExperimental })
+  .description('Ping a runtime')
+  .action((id, instanceId) => {
+    checkOptions();
+    experimental.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    experimental.runtimeStatus(id,instanceId);
+  })
+ 
  
 
 program.parse();

@@ -17,7 +17,7 @@ pass_counter=0
 fail_counter=0
 running_counter=0
 omitted_counter=0
-total_tests=102
+total_tests=111
 executed_counter=0
 
 
@@ -229,6 +229,8 @@ cleanup_function() {
 
 #---------------------------------------------------------------------------------------------------
 
+
+
 printf "\n${COLOR_CYAN}* Projects\n${COLOR_RESET}"
 # Project Functions
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project" "grep -c CLITestProject" "1" "Project List"
@@ -429,14 +431,21 @@ printf "\n${COLOR_CYAN}* Experimental - Messaging${COLOR_RESET}\n"
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-create queue testqueue fl425e0505dec7b426384550" "grep '\"queueName\":\"testqueue\"' | wc -l" "1" "Experimental - Create message queue"
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-delete queue testqueue fl425e0505dec7b426384550" "grep '\"queueName\":\"testqueue\"' | wc -l" "1" "Experimental - Delete message queue"
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-stats CLITestQueue fl1f48d9bb44098e5cedc1f4" "grep connectionRate | wc -l" "1" "Experimental - Messaging stats"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber CLITestQueueSubscriber enabled fl1f48d9bb44098e5cedc1f4" "grep 'Successfully enabled the subscriber' | wc -l" "1" "Experimental - Messaging Enable Subsciber"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber CLITestQueueSubscriber suspended fl1f48d9bb44098e5cedc1f4" "grep 'Successfully suspended the subscriber' | wc -l" "1" "Experimental - Messaging Suspend Subsciber"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber CLITestQueueSubscriber disabled fl1f48d9bb44098e5cedc1f4" "grep 'Successfully disabled the subscriber' | wc -l" "1" "Experimental - Messaging Disable Subsciber"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber fl1f48d9bb44098e5cedc1f4" "grep CLITestQueueSubscriber | wc -l" "1" "Experimental - Messaging Subscriber List"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber enabled fl1f48d9bb44098e5cedc1f4" "grep 'Successfully enabled the subscriber' | wc -l" "1" "Experimental - Messaging Enable Subsciber"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber suspended fl1f48d9bb44098e5cedc1f4" "grep 'Successfully suspended the subscriber' | wc -l" "1" "Experimental - Messaging Suspend Subsciber"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber disabled fl1f48d9bb44098e5cedc1f4" "grep 'Successfully disabled the subscriber' | wc -l" "1" "Experimental - Messaging Disable Subsciber"
+run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber fl1f48d9bb44098e5cedc1f4 CLITestQueueSubscriber" "grep CLI | wc -l" "1" "cat" "Experimental - Messaging Subscriber Detail"
+subscriberJson=`echo $result | jq --arg new_name "CreatedSubscriber" '.name = $new_name'`
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-create fl1f48d9bb44098e5cedc1f4 '$subscriberJson'" "grep CreatedSubscriber | wc -l" "1" "Experimental - Messaging Subscriber Create"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-delete fl1f48d9bb44098e5cedc1f4 CreatedSubscriber" "grep CreatedSubscriber | wc -l" "1" "Experimental - Messaging Subscriber Delete"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Experimental - User${COLOR_RESET}\n"
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user" "grep automation | wc -l" "1" "Experimental - User"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user-list" "grep output | wc -l" "1" "Experimental - Int User List Full"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user-list automation" "grep Automation | wc -l" "1" "Experimental - Int User List Search"
 
 #---------------------------------------------------------------------------------------------------
 
@@ -452,6 +461,10 @@ run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-connector-account-wf-config fl425e0505dec7b426384550" "grep webhook | wc -l" "1" "Experimental - Get Connector Account WF Config"
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-search CLITestProject" "grep fl425e0505dec7b426384550 | wc -l" "1" "Experimental - Project Search"
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-deployments fl425e0505dec7b426384550" "grep output | wc -l" "1" "Experimental - Project Deployments"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8" "grep 'Hello Workflow' | wc -l" "1" "Experimental - Workflow Detail"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-enabled fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8 false" "grep output | wc -l" "1" "Experimental - Workflow Disable"
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-enabled fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8 true" "grep output | wc -l" "1" "Experimental - Workflow Enable"
+
 
 #---------------------------------------------------------------------------------------------------
 
