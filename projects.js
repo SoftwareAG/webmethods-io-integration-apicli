@@ -233,6 +233,32 @@ function processResponse(restEndPointUrl, err, data, response) {
     }
 }
 
+function downloadExport(restEndPointUrl, err, data, response,filename){
+    let status = response.status
+    debug("Downloading Export");
+    if(status!=200){
+        console.log(JSON.stringify(data));
+        process.exit(status);
+    }
+    else{
+        request.downloadFile(data, filename, downloadCompleted);
+    }
+}
+
+function downloadCompleted(data,status,filename){
+    debug("Download Completed");
+    if(status!=0){
+        console.log('{');
+        console.log('  project-export":"error", "filename":"'+ filename +',');
+        console.log(JSON.stringifydata);
+        console.log('}');
+        process.exit(status);
+    }
+    else{
+        console.log('{"project-export":"success", "filename":"'+ filename + '"}');
+    }
+}
+
 /* reference data */
 function listRefData(projectId){
     debug("List Reference Data - Project [" + projectId + "]");
@@ -392,11 +418,17 @@ function setWebhookAuth(projectId, workflowUid, authType) {
     request.post(url, username, password, timeout, data, processResponse);
 }
 
-function exportProj(projectId){
-    debug("Exporting Project [" + projectId + "]");
+function exportProj(projectId, filename) {
+    debug("Exporting Project [" + projectId + "]" + " to file [" + filename + "]");
     url += "/" + projectId + "/export";
     data = undefined;
-    request.post(url, username, password, timeout, data, processResponse);
+
+    if (filename) {
+        request.postDownloadFile(url, username, password, timeout, data, filename, downloadExport);
+    } else {
+        request.post(url, username, password, timeout, data, processResponse);
+    }
+
 }
 
 

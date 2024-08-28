@@ -251,6 +251,9 @@ run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param
 #Update Project
 run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-update $projectUid changed" "grep 'changed' | wc -l" "1" "Update Project Name"
 
+#Export Project
+run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-export $projectUid project.zip" "grep 'success' | wc -l" "1" "Export Project"
+
 #---------------------------------------------------------------------------------------------------
 
 #Triggers

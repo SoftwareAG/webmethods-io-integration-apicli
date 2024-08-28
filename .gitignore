@@ -1,3 +1,4 @@
 node_modules/
 ca.pem
 test.sh
+.DS_Store
