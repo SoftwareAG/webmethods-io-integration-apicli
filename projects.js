@@ -64,6 +64,20 @@ $ node wmiocli.js
     -p password 
     project-delete fl65d3aa87fc1783ea5cf8c8
 
+\x1b[32mExport Project:\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-export fl65d3aa87fc1783ea5cf8c8 myproject.zip
+
+\x1b[32mImport Project:\x1b[0m
+$ node wmiocli.js 
+    -d tenant.int-aws-us.webmethods.io 
+    -u user 
+    -p password 
+    project-export myproject.zip MyNewProjectName
+
 \x1b[32mGet Project Assets:\x1b[0m
 $ node wmiocli.js 
     -d tenant.int-aws-us.webmethods.io 
@@ -233,6 +247,32 @@ function processResponse(restEndPointUrl, err, data, response) {
     }
 }
 
+function downloadCompleted(data,status,filename){
+    debug("Download Completed");
+    if(status!=0){
+        console.log('{');
+        console.log('  project-export":"error", "filename":"'+ filename +',');
+        console.log(JSON.stringifydata);
+        console.log('}');
+        process.exit(status);
+    }
+    else{
+        console.log('{"project-export":"success", "filename":"'+ filename + '"}');
+    }
+}
+
+function downloadExport(restEndPointUrl, err, data, response,filename){
+    let status = response.status
+    debug("Downloading Export");
+    if(status!=200){
+        console.log(JSON.stringify(data));
+        process.exit(status);
+    }
+    else{
+        request.downloadFile(data, filename, downloadCompleted);
+    }
+}
+
 /* reference data */
 function listRefData(projectId){
     debug("List Reference Data - Project [" + projectId + "]");
@@ -392,11 +432,29 @@ function setWebhookAuth(projectId, workflowUid, authType) {
     request.post(url, username, password, timeout, data, processResponse);
 }
 
-function exportProj(projectId){
+
+function exportProj(projectId, filename){
     debug("Exporting Project [" + projectId + "]");
     url += "/" + projectId + "/export";
     data = undefined;
-    request.post(url, username, password, timeout, data, processResponse);
+
+    if(filename){
+        request.postDownloadFile(url,username,password,timeout,data,filename,downloadExport);
+    } else {
+        request.post(url, username, password, timeout, data, processResponse);
+    }
+}
+
+function importProj(filename,newProjectName) {
+    debug("Importing Project");
+    url="https://" + domainName + "/apis/v1/rest/project-import";
+
+    var data=undefined;
+    if(newProjectName){
+        data={};
+        data.new_project_name = newProjectName;
+    }
+    request.postUploadFile(url, username, password, timeout,data, filename,"project", processResponse);
 }
 
 
@@ -465,5 +523,5 @@ module.exports = {
     listWebhooks, regenWebhook, setWebhookAuth,
     listTriggers, deleteTrigger,
     listRefData, getRefData, addRefData, updateRefData, deleteRefData,
-    exportProj
+    exportProj,importProj
 };

@@ -17,7 +17,7 @@ pass_counter=0
 fail_counter=0
 running_counter=0
 omitted_counter=0
-total_tests=111
+total_tests=114
 executed_counter=0
 
 
@@ -224,7 +224,7 @@ run_test() {
 cleanup_function() {
  echo 
  echo " Performing Cleanup Activities"
- node wmiocli.js -d ${DEV_TENANT} -u "${USER}" -p "${PASS}" project-delete $projectUid
+ node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u "${USER}" -p "${PASS}" project-delete $projectUid
 }
 
 #---------------------------------------------------------------------------------------------------
@@ -233,84 +233,95 @@ cleanup_function() {
 
 printf "\n${COLOR_CYAN}* Projects\n${COLOR_RESET}"
 # Project Functions
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project" "grep -c CLITestProject" "1" "Project List"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project fl425e0505dec7b426384550" "grep -c CLITestProject" "1" "Get Single Project"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-assets fl425e0505dec7b426384550" "grep -c HelloFlow" "1" "cat" "Get Project Assets" 
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project" "grep -c CLITestProject" "1" "Project List"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project fl425e0505dec7b426384550" "grep -c CLITestProject" "1" "Get Single Project"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-assets fl425e0505dec7b426384550" "grep -c HelloFlow" "1" "cat" "Get Project Assets" 
 projectAssetsJson=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-assets-detailed fl425e0505dec7b426384550" "grep -c HelloFlow" "1" "Get Detailed Project Assets"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-create created" "grep uid | wc -l" "1"  "jq -r .output.uid" "Create Project"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-assets-detailed fl425e0505dec7b426384550" "grep -c HelloFlow" "1" "Get Detailed Project Assets"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-create created" "grep uid | wc -l" "1"  "jq -r .output.uid" "Create Project"
 projectUid=`echo $result`
 
+#Export Project
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-export $projectUid project.zip" "grep 'success' | wc -l" "1" "Export Project"
+
+#Import project
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-import project.zip newnameproject" "grep 'IMPORT_SUCCESS' | wc -l" "1" "Import Project"
+
+#Delete Imported Project
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-delete $projectUid" "grep 'Project deleted successfully' | wc -l" "1" "Delete Imported Project"
+
 #Project Params
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param-create created paramname paramvalue false false" "grep -c uid" "1" "Create Proj Param" 
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param created" "grep uid | wc -l" "1" "jq -r .output[0].uid" "Get Created Project Param"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param-create created paramname paramvalue false false" "grep -c uid" "1" "Create Proj Param" 
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param created" "grep uid | wc -l" "1" "jq -r .output[0].uid" "Get Created Project Param"
 projectParamId=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param-update created $projectParamId paramname paramvaluechanged false false" "grep paramvaluechange | wc -l" "1" "Update Project Param"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param-delete created $projectParamId" "grep 'deleted successfully' | wc -l" "1" "Delete Project Param"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param-update created $projectParamId paramname paramvaluechanged false false" "grep paramvaluechange | wc -l" "1" "Update Project Param"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-param-delete created $projectParamId" "grep 'deleted successfully' | wc -l" "1" "Delete Project Param"
 
 #Update Project
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-update $projectUid changed" "grep 'changed' | wc -l" "1" "Update Project Name"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-update $projectUid changed" "grep 'changed' | wc -l" "1" "Update Project Name"
+
+
 
 #---------------------------------------------------------------------------------------------------
 
 #Triggers
 printf "\n${COLOR_CYAN}* Triggers${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-export CLITestProject fl8c6e1a24c22ffd6d912494 wf.zip" "grep 'success' | wc -l" "1" "Export workflow"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-import $projectUid wf.zip" "grep uid | wc -l" "1" "jq -r .output.uid" "Import Workflow"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-export CLITestProject fl8c6e1a24c22ffd6d912494 wf.zip" "grep 'success' | wc -l" "1" "Export workflow"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-import $projectUid wf.zip" "grep uid | wc -l" "1" "jq -r .output.uid" "Import Workflow"
 workflowUid=`echo $result`
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-triggers-list $projectUid" "grep 'clock trigger' | wc -l" "1" "jq -r .output.objects[0].trigger.uid" "List triggers in project"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-triggers-list $projectUid" "grep 'clock trigger' | wc -l" "1" "jq -r .output.objects[0].trigger.uid" "List triggers in project"
 triggerUid=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-triggers-delete $projectUid $triggerUid" "grep 'This trigger is used in below workflows' | wc -l" "1" "Delete Trigger"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-delete $projectUid ${workflowUid}" "grep 'deleted successfully' | wc -l" "1" "Workflow Delete"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-triggers-delete $projectUid $triggerUid" "grep 'This trigger is used in below workflows' | wc -l" "1" "Delete Trigger"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-delete $projectUid ${workflowUid}" "grep 'deleted successfully' | wc -l" "1" "Workflow Delete"
 
 #Delete Project
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-delete $projectUid" "grep 'Project deleted successfully' | wc -l" "1" "Delete Project"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-delete $projectUid" "grep 'Project deleted successfully' | wc -l" "1" "Delete Project"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Publish/Deploy${COLOR_RESET}\n"
 #Deploy & Publish
 
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-publish fl425e0505dec7b426384550 CITest ${PROD_TENANT} ${USER} '${PASS}' '${projectAssetsJson}'" 'grep CITest | wc -l' '1' 'Project Publish'
-run_test_return_value "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' experimental-project-deployments fl425e0505dec7b426384550" "grep data_location | wc -l" "1" "jq -r .output[-1].version" "Experimental - List Project Deployments"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-publish fl425e0505dec7b426384550 CITest ${PROD_TENANT} ${USER} '${PASS}' '${projectAssetsJson}'" 'grep CITest | wc -l' '1' 'Project Publish'
+run_test_return_value "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' experimental-project-deployments fl425e0505dec7b426384550" "grep data_location | wc -l" "1" "jq -r .output[-1].version" "Experimental - List Project Deployments"
 lastVersion=`echo $result`
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-deploy CLITestProject ${lastVersion}" "grep DEPLOY_SUCCESS | wc -l" "1" "Project Deploy"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-deploy CLITestProject ${lastVersion}" "grep DEPLOY_SUCCESS | wc -l" "1" "Project Deploy"
 
 #Now cleanup after deploy
-run_test_return_value "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' experimental-project-search CLITestProject" "grep CLITestProject | wc -l" "1" "jq -r .output.projects[0].uid" "Cleanup - Experimental Project Search"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' experimental-project-search CLITestProject" "grep CLITestProject | wc -l" "1" "jq -r .output.projects[0].uid" "Cleanup - Experimental Project Search"
 prodProjId=`echo $result`
-run_test_return_value "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' experimental-project-workflows ${prodProjId}" "grep workflows | wc -l" "1" "jq -r .workflows[0].uid" "Cleanup - Project Assets Workflow"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' experimental-project-workflows ${prodProjId}" "grep workflows | wc -l" "1" "jq -r .workflows[0].uid" "Cleanup - Project Assets Workflow"
 workflowId=`echo $result`
-run_test_return_value "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-assets fl425e0505dec7b426384550" "grep output | wc -l" "1" "jq -r .output.flows[-1]" "Cleanup - Project Assets FlowService"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-assets fl425e0505dec7b426384550" "grep output | wc -l" "1" "jq -r .output.flows[-1]" "Cleanup - Project Assets FlowService"
 flowserviceId=`echo $result`
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' workflow-delete CLITestProject ${workflowId}" "grep 'deleted successfully' | wc -l" "1" "Cleanup - Workflow Delete in Prod"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' flowservice-delete CLITestProject ${flowserviceId}" "grep 'deleted successfully' | wc -l" "1" "Cleanup - FlowService Delete in Prod"
-run_test_return_value "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' experimental-project-workflows ${prodProjId}" "grep workflows | wc -l" "1" "jq -r .workflows[0].uid" "Cleanup - Project Assets Workflow"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' workflow-delete CLITestProject ${workflowId}" "grep 'deleted successfully' | wc -l" "1" "Cleanup - Workflow Delete in Prod"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' flowservice-delete CLITestProject ${flowserviceId}" "grep 'deleted successfully' | wc -l" "1" "Cleanup - FlowService Delete in Prod"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' experimental-project-workflows ${prodProjId}" "grep workflows | wc -l" "1" "jq -r .workflows[0].uid" "Cleanup - Project Assets Workflow"
 workflowId=`echo $result`
-run_test_return_value "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-assets ${prodProjId}" "grep output | wc -l" "1" "jq -r .output.flows[-1]" "Cleanup - Project Assets FlowService"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-assets ${prodProjId}" "grep output | wc -l" "1" "jq -r .output.flows[-1]" "Cleanup - Project Assets FlowService"
 flowserviceId=`echo $result`
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' workflow-delete CLITestProject ${workflowId}" "grep 'deleted successfully' | wc -l" "1" "Cleanup - Workflow Delete in Prod"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' flowservice-delete CLITestProject ${flowserviceId}" "grep 'deleted successfully' | wc -l" "1" "Cleanup - Workflow Delete in Prod"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-delete CLITestProject" "grep 'Project deleted successfully' | wc -l" "1" "Cleanup - Delete Project from prod"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' workflow-delete CLITestProject ${workflowId}" "grep 'deleted successfully' | wc -l" "1" "Cleanup - Workflow Delete in Prod"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' flowservice-delete CLITestProject ${flowserviceId}" "grep 'deleted successfully' | wc -l" "1" "Cleanup - Workflow Delete in Prod"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-delete CLITestProject" "grep 'Project deleted successfully' | wc -l" "1" "Cleanup - Delete Project from prod"
 
 #---------------------------------------------------------------------------------------------------
 
 #webooks
 printf "\n${COLOR_CYAN}* Webhooks${COLOR_RESET}\n"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-webhooks-list CLITestProject" "grep webhook_auth | wc -l" "1" "jq -r .output.objects[0].uid" "List Project webhooks"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-webhooks-list CLITestProject" "grep webhook_auth | wc -l" "1" "jq -r .output.objects[0].uid" "List Project webhooks"
 webhookUid=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-webhooks-regenerate CLITestProject $webhookUid" "grep webhook_url | wc -l" "1" "Regenerate a webhook"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-webhooks-auth CLITestProject $webhookUid none" "grep webhook_token | wc -l" "1" "Change webhook Auth Type"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-webhooks-regenerate CLITestProject $webhookUid" "grep webhook_url | wc -l" "1" "Regenerate a webhook"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-webhooks-auth CLITestProject $webhookUid none" "grep webhook_token | wc -l" "1" "Change webhook Auth Type"
 
 #---------------------------------------------------------------------------------------------------
 
 #Reference Data
 printf "\n${COLOR_CYAN}* Reference Data${COLOR_RESET}\n"
 
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-create created" "grep uid | wc -l" "1"  "jq -r .output.uid" "Create Project"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-create created" "grep uid | wc -l" "1"  "jq -r .output.uid" "Create Project"
 projectUid=`echo $result`
 
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-ref-data CLITestProject refDataTest" "grep 'columnDelimiter' | wc -l" "1" "List reference data"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-ref-data CLITestProject refDataTest" "grep 'columnDelimiter' | wc -l" "1" "List reference data"
 echo "char,alphabet,ascii" > refdata.csv
 echo "0,-1,48" >> refdata.csv
 echo "1,-1,49" >> refdata.csv
@@ -324,165 +335,165 @@ echo "8,-1,56" >> refdata.csv
 echo "9,-1,57" >> refdata.csv
 
 
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-ref-data-add CLITestProject refDataTestNew refdatatestnew refdata.csv" "grep 'created successfully' | wc -l" "1" "Add reference data"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-ref-data-update CLITestProject refDataTestNew refdatatestnew refdata.csv" "grep 'updated successfully' | wc -l" "1" "Update reference data"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-ref-data-delete CLITestProject refDataTestNew" "grep 'deleted successfully' | wc -l" "1" "Delete reference data"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-ref-data-add CLITestProject refDataTestNew refdatatestnew refdata.csv" "grep 'created successfully' | wc -l" "1" "Add reference data"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-ref-data-update CLITestProject refDataTestNew refdatatestnew refdata.csv" "grep 'updated successfully' | wc -l" "1" "Update reference data"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-ref-data-delete CLITestProject refDataTestNew" "grep 'deleted successfully' | wc -l" "1" "Delete reference data"
 rm refdata.csv
 
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-delete $projectUid" "grep 'Project deleted successfully' | wc -l" "1" "Delete Project"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-delete $projectUid" "grep 'Project deleted successfully' | wc -l" "1" "Delete Project"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Roles${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role" "grep count | wc -l" "1" "List defined roles"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role Admin" "grep permissions | wc -l" "1" "Get single role"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role-create testrole desc 'Default,r,w,e;'" "grep access_list | wc -l" "1" "jq -r .output.uid" "Role Create"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role" "grep count | wc -l" "1" "List defined roles"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role Admin" "grep permissions | wc -l" "1" "Get single role"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role-create testrole desc 'Default,r,w,e;'" "grep access_list | wc -l" "1" "jq -r .output.uid" "Role Create"
 roleId=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role-update ${roleId} testrole desc 'Default,r;'" "grep access_list | wc -l" "1" "Role Update"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role-update ${roleId} testrole desc 'Default,r;'" "grep access_list | wc -l" "1" "Role Update"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Users${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' user" "grep automation | wc -l" "1" "Get User list"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' user-role-assignment apiuser testrole" "grep  access_list | wc -l" "1" "User role assignment"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' user-role-assignment apiuser Developer" "grep  permissions | wc -l" "1" "User role assignment revert"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' user" "grep automation | wc -l" "1" "Get User list"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' user-role-assignment apiuser testrole" "grep  access_list | wc -l" "1" "User role assignment"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' user-role-assignment apiuser Developer" "grep  permissions | wc -l" "1" "User role assignment revert"
 
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role-delete ${roleId}" "grep 'Tenant role deleted' | wc -l" "1" "Role Delete"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' role-delete ${roleId}" "grep 'Tenant role deleted' | wc -l" "1" "Role Delete"
 
 #---------------------------------------------------------------------------------------------------
 
 #Workflows
 printf "\n${COLOR_CYAN}* Worlkflows${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-export CLITestProject fl835fe9b99489cc5c3dbdc8 wf.zip" "grep 'success' | wc -l" "1" "Export workflow"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-import CLITestProject wf.zip" "grep uid | wc -l" "1" "jq -r .output.uid" "Import Workflow"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-export CLITestProject fl835fe9b99489cc5c3dbdc8 wf.zip" "grep 'success' | wc -l" "1" "Export workflow"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-import CLITestProject wf.zip" "grep uid | wc -l" "1" "jq -r .output.uid" "Import Workflow"
 workflowUid=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-delete CLITestProject $workflowUid" "grep 'Object deleted successfully' | wc -l" "1" "Delete workflow"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-execute CLITestProject fl8c6e1a24c22ffd6d912494" "grep 'Workflow enqueue successfully.' | wc -l" "1" "jq -r .output.run_id" "Execute Workflow"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-delete CLITestProject $workflowUid" "grep 'Object deleted successfully' | wc -l" "1" "Delete workflow"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-execute CLITestProject fl8c6e1a24c22ffd6d912494" "grep 'Workflow enqueue successfully.' | wc -l" "1" "jq -r .output.run_id" "Execute Workflow"
 vbid=`echo $result`
 sleep 5
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-status CLITestProject $vbid" "grep status | wc -l" "1" "Workflow Execution Status"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-create Default testcliwf 'test cli wf'" "grep output | wc -l" "1" "jq -r .output.uid" "Workflow Create"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-status CLITestProject $vbid" "grep status | wc -l" "1" "Workflow Execution Status"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-create Default testcliwf 'test cli wf'" "grep output | wc -l" "1" "jq -r .output.uid" "Workflow Create"
 workflowUid=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-delete Default $workflowUid" "grep 'Object deleted successfully' | wc -l" "1" "Delete workflow"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-delete Default $workflowUid" "grep 'Object deleted successfully' | wc -l" "1" "Delete workflow"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* FlowService${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' flowservice-export CLITestProject ExportDeleteImportTest fs.zip" "grep success | wc -l" "1" "Export FlowService"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' flowservice-delete CLITestProject ExportDeleteImportTest" "grep 'deleted successfully' | wc -l" "1" "Delete FlowService"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' flowservice-import CLITestProject fs.zip" "grep 'serviceFullName' | wc -l" "1" "Import FlowService"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' flowservice-execute CLITestProject HelloFlow" "grep 'Hello Flow' | wc -l" "1" "Execute FlowService"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' flowservice-export CLITestProject ExportDeleteImportTest fs.zip" "grep success | wc -l" "1" "Export FlowService"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' flowservice-delete CLITestProject ExportDeleteImportTest" "grep 'deleted successfully' | wc -l" "1" "Delete FlowService"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' flowservice-import CLITestProject fs.zip" "grep 'serviceFullName' | wc -l" "1" "Import FlowService"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' flowservice-execute CLITestProject HelloFlow" "grep 'Hello Flow' | wc -l" "1" "Execute FlowService"
 rm fs.zip
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Theme${COLOR_RESET}\n"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme" \
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme" \
   "grep 'settings' | wc -l" \
   "1" \
   "jq -r '.output[] | select(.name == \"ThemeRed\") | .uid'" \
   "List Themes"
 themeId=`echo $result`
 
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme ${themeId}" "grep 'settings' | wc -l" "1" "Get Individual Theme"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme ${themeId}" "grep 'settings' | wc -l" "1" "cat" "Get Individual Theme"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme ${themeId}" "grep 'settings' | wc -l" "1" "Get Individual Theme"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme ${themeId}" "grep 'settings' | wc -l" "1" "cat" "Get Individual Theme"
 themeText=$result
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}'  theme-create TestTheme 'Test Theme3' '$themeText'" "grep primaryColor | wc -l" "1" "jq -r .output.uid" "Theme create"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}'  theme-create TestTheme 'Test Theme3' '$themeText'" "grep primaryColor | wc -l" "1" "jq -r .output.uid" "Theme create"
 themeId=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}'  theme-update ${themeId} TestTheme 'Test Theme3' '$themeText'" "grep primaryColor | wc -l" "1" "Theme Update"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}'  theme-update ${themeId} TestTheme 'Test Theme3' '$themeText'" "grep primaryColor | wc -l" "1" "Theme Update"
 
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme-activate ${themeId}" "grep '\"active\":true' | wc -l" "1" "Theme activate"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme-deactivate ${themeId}" "grep '\"active\":false' | wc -l" "1" "Theme deactivate"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme-delete ${themeId}" "grep 'deleted successfully' | wc -l" "1" "Theme delete"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme-activate ${themeId}" "grep '\"active\":true' | wc -l" "1" "Theme activate"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme-deactivate ${themeId}" "grep '\"active\":false' | wc -l" "1" "Theme deactivate"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme-delete ${themeId}" "grep 'deleted successfully' | wc -l" "1" "Theme delete"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Recipes${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' recipe" "grep 'recipes' | wc -l" "1" "List Recipes"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' recipe-create wf.zip" "grep output | wc -l" "1" "jq -r .output.uid" "Recipe Create"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' recipe" "grep 'recipes' | wc -l" "1" "List Recipes"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' recipe-create wf.zip" "grep output | wc -l" "1" "jq -r .output.uid" "Recipe Create"
 recipeId=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' recipe-delete ${recipeId}" "grep 'deleted successfully' | wc -l" "1" "Recipe Delete"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' recipe-delete ${recipeId}" "grep 'deleted successfully' | wc -l" "1" "Recipe Delete"
 rm wf.zip
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Monitor${COLOR_RESET}\n"
 TODAY=$(date +'%Y-%m-%d')
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' monitor 1 1 ${TODAY} ${TODAY}" "grep 'success' | wc -l" "1" "jq -r .output.graph.logs[0].uid" "Workflow Monitor"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' monitor 1 1 ${TODAY} ${TODAY}" "grep 'success' | wc -l" "1" "jq -r .output.graph.logs[0].uid" "Workflow Monitor"
 monitorId=`echo $result`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' monitor-workflow-log ${monitorId}" "grep duration | wc -l" "1" "Workflow Monitor Item"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' monitor-workflow-log ${monitorId}" "grep duration | wc -l" "1" "Workflow Monitor Item"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Cloud IDM${COLOR_RESET}\n"
-run_test_return_value "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-user-create jack jones noreply@webMethods.io jackjones" "grep 'response' | wc -l" "1" "jq -r .response" "Create IDM User"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-user-create jack jones noreply@webMethods.io jackjones" "grep 'response' | wc -l" "1" "jq -r .response" "Create IDM User"
 userId=`echo $result`
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-user jackjones " "grep firstName | wc -l" "1" "Get IDM User"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-user-search auto false webmethodsioint " "grep automation | wc -l" "1" "Search IDM User"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-user-count auto " "grep response | wc -l" "1" "Count IDM Users"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-roles " "grep Administrator | wc -l" "1" "Get Environment available roles"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}'  idm-user-role-mappings f3a4e564-5d68-4295-84b4-2b552845d0f7 " "grep Administrator | wc -l" "1" "Get user roles"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}'  idm-user-unlock ${userId}" "grep unlocked | wc -l" "1" "Unlock User"
-run_test "node wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}'  idm-user-delete ${userId}" "grep deleted | wc -l" "1" "Delete User"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-user jackjones " "grep firstName | wc -l" "1" "Get IDM User"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-user-search auto false webmethodsioint " "grep automation | wc -l" "1" "Search IDM User"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-user-count auto " "grep response | wc -l" "1" "Count IDM Users"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' idm-roles " "grep Administrator | wc -l" "1" "Get Environment available roles"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}'  idm-user-role-mappings f3a4e564-5d68-4295-84b4-2b552845d0f7 " "grep Administrator | wc -l" "1" "Get user roles"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}'  idm-user-unlock ${userId}" "grep unlocked | wc -l" "1" "Unlock User"
+run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}'  idm-user-delete ${userId}" "grep deleted | wc -l" "1" "Delete User"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Experimental - Messaging${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-create queue testqueue fl425e0505dec7b426384550" "grep '\"queueName\":\"testqueue\"' | wc -l" "1" "Experimental - Create message queue"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-delete queue testqueue fl425e0505dec7b426384550" "grep '\"queueName\":\"testqueue\"' | wc -l" "1" "Experimental - Delete message queue"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-stats CLITestQueue fl1f48d9bb44098e5cedc1f4" "grep connectionRate | wc -l" "1" "Experimental - Messaging stats"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber fl1f48d9bb44098e5cedc1f4" "grep CLITestQueueSubscriber | wc -l" "1" "Experimental - Messaging Subscriber List"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber enabled fl1f48d9bb44098e5cedc1f4" "grep 'Successfully enabled the subscriber' | wc -l" "1" "Experimental - Messaging Enable Subsciber"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber suspended fl1f48d9bb44098e5cedc1f4" "grep 'Successfully suspended the subscriber' | wc -l" "1" "Experimental - Messaging Suspend Subsciber"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber disabled fl1f48d9bb44098e5cedc1f4" "grep 'Successfully disabled the subscriber' | wc -l" "1" "Experimental - Messaging Disable Subsciber"
-run_test_return_value "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber fl1f48d9bb44098e5cedc1f4 CLITestQueueSubscriber" "grep CLI | wc -l" "1" "cat" "Experimental - Messaging Subscriber Detail"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-create queue testqueue fl425e0505dec7b426384550" "grep '\"queueName\":\"testqueue\"' | wc -l" "1" "Experimental - Create message queue"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-delete queue testqueue fl425e0505dec7b426384550" "grep '\"queueName\":\"testqueue\"' | wc -l" "1" "Experimental - Delete message queue"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-stats CLITestQueue fl1f48d9bb44098e5cedc1f4" "grep connectionRate | wc -l" "1" "Experimental - Messaging stats"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber fl1f48d9bb44098e5cedc1f4" "grep CLITestQueueSubscriber | wc -l" "1" "Experimental - Messaging Subscriber List"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber enabled fl1f48d9bb44098e5cedc1f4" "grep 'Successfully enabled the subscriber' | wc -l" "1" "Experimental - Messaging Enable Subsciber"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber suspended fl1f48d9bb44098e5cedc1f4" "grep 'Successfully suspended the subscriber' | wc -l" "1" "Experimental - Messaging Suspend Subsciber"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-state CLITestQueueSubscriber disabled fl1f48d9bb44098e5cedc1f4" "grep 'Successfully disabled the subscriber' | wc -l" "1" "Experimental - Messaging Disable Subsciber"
+run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber fl1f48d9bb44098e5cedc1f4 CLITestQueueSubscriber" "grep CLI | wc -l" "1" "cat" "Experimental - Messaging Subscriber Detail"
 subscriberJson=`echo $result | jq --arg new_name "CreatedSubscriber" '.name = $new_name'`
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-create fl1f48d9bb44098e5cedc1f4 '$subscriberJson'" "grep CreatedSubscriber | wc -l" "1" "Experimental - Messaging Subscriber Create"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-delete fl1f48d9bb44098e5cedc1f4 CreatedSubscriber" "grep CreatedSubscriber | wc -l" "1" "Experimental - Messaging Subscriber Delete"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-create fl1f48d9bb44098e5cedc1f4 '$subscriberJson'" "grep CreatedSubscriber | wc -l" "1" "Experimental - Messaging Subscriber Create"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-messaging-subscriber-delete fl1f48d9bb44098e5cedc1f4 CreatedSubscriber" "grep CreatedSubscriber | wc -l" "1" "Experimental - Messaging Subscriber Delete"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Experimental - User${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user" "grep automation | wc -l" "1" "Experimental - User"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user-list" "grep output | wc -l" "1" "Experimental - Int User List Full"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user-list automation" "grep Automation | wc -l" "1" "Experimental - Int User List Search"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user" "grep automation | wc -l" "1" "Experimental - User"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user-list" "grep output | wc -l" "1" "Experimental - Int User List Full"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-user-list automation" "grep Automation | wc -l" "1" "Experimental - Int User List Search"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Experimental - Stages${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-stages" "grep isSAGCloudEnvironmentEnabled | wc -l" "1" "Experimental - Get Stage Info"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-stages" "grep isSAGCloudEnvironmentEnabled | wc -l" "1" "Experimental - Get Stage Info"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Experimental - Project${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-workflows fl425e0505dec7b426384550" "grep Hello | wc -l" "1" "Experimental - Get Project Workflow"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-flowservices fl425e0505dec7b426384550" "grep ExportDeleteImportTest | wc -l" "1" "Experimental - Get Project FlowServices"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-connector-accounts fl425e0505dec7b426384550" "grep output | wc -l" "1" "Experimental - Get Connector Accounts"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-connector-account-wf-config fl425e0505dec7b426384550" "grep webhook | wc -l" "1" "Experimental - Get Connector Account WF Config"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-search CLITestProject" "grep fl425e0505dec7b426384550 | wc -l" "1" "Experimental - Project Search"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-deployments fl425e0505dec7b426384550" "grep output | wc -l" "1" "Experimental - Project Deployments"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8" "grep 'Hello Workflow' | wc -l" "1" "Experimental - Workflow Detail"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-enabled fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8 false" "grep output | wc -l" "1" "Experimental - Workflow Disable"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-enabled fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8 true" "grep output | wc -l" "1" "Experimental - Workflow Enable"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-workflows fl425e0505dec7b426384550" "grep Hello | wc -l" "1" "Experimental - Get Project Workflow"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-flowservices fl425e0505dec7b426384550" "grep ExportDeleteImportTest | wc -l" "1" "Experimental - Get Project FlowServices"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-connector-accounts fl425e0505dec7b426384550" "grep output | wc -l" "1" "Experimental - Get Connector Accounts"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-connector-account-wf-config fl425e0505dec7b426384550" "grep webhook | wc -l" "1" "Experimental - Get Connector Account WF Config"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-search CLITestProject" "grep fl425e0505dec7b426384550 | wc -l" "1" "Experimental - Project Search"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-project-deployments fl425e0505dec7b426384550" "grep output | wc -l" "1" "Experimental - Project Deployments"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8" "grep 'Hello Workflow' | wc -l" "1" "Experimental - Workflow Detail"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-enabled fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8 false" "grep output | wc -l" "1" "Experimental - Workflow Disable"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-enabled fl425e0505dec7b426384550 fl835fe9b99489cc5c3dbdc8 true" "grep output | wc -l" "1" "Experimental - Workflow Enable"
 
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Experimental - Workflow Monitor${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-monitor success ${TODAY}T00:00:00.000Z ${TODAY}T23:59:59.999Z fl425e0505dec7b426384550 fl8c6e1a24c22ffd6d912494" "grep count_transaction | wc -l" "1" "Experimental - Workflow Monitor"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-execution-analysis ${vbid} json" "grep bill_uid | wc -l" "1" "Experimental - Workflow Execution Analysis"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-monitor success ${TODAY}T00:00:00.000Z ${TODAY}T23:59:59.999Z fl425e0505dec7b426384550 fl8c6e1a24c22ffd6d912494" "grep count_transaction | wc -l" "1" "Experimental - Workflow Monitor"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-workflow-execution-analysis ${vbid} json" "grep bill_uid | wc -l" "1" "Experimental - Workflow Execution Analysis"
 
 #---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Experimental - FlowServices${COLOR_RESET}\n"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-scheduler fl425e0505dec7b426384550 HelloFlow pause" "grep Success | wc -l" "1" "Experimental - Set Flow Service Scheduler status"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-http fl425e0505dec7b426384550 HelloFlow false" "grep Successful | wc -l" "1" "Experimental - Set Flowservice Disable http "
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-http fl425e0505dec7b426384550 HelloFlow true" "grep Successful | wc -l" "1" "Experimental - Set Flowservice Enable http"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-resume fl425e0505dec7b426384550 HelloFlow true" "grep Successful | wc -l" "1" "Experimental - Flowservice Enable Resume"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-resume fl425e0505dec7b426384550 HelloFlow false" "grep Successful | wc -l" "1" "Experimental - FlowService Disable Resume"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-restart fl425e0505dec7b426384550 HelloFlow true" "grep Successful | wc -l" "1" "Experimental - Flowservice Enable Restart"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-restart fl425e0505dec7b426384550 HelloFlow false" "grep Successful | wc -l" "1" "Experimental - FlowService Disable Restart"
-run_test "node wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-details fl425e0505dec7b426384550" "grep Success | wc -l" "1" "Experimental - Get Flow Service details"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-scheduler fl425e0505dec7b426384550 HelloFlow pause" "grep Success | wc -l" "1" "Experimental - Set Flow Service Scheduler status"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-http fl425e0505dec7b426384550 HelloFlow false" "grep Successful | wc -l" "1" "Experimental - Set Flowservice Disable http "
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-http fl425e0505dec7b426384550 HelloFlow true" "grep Successful | wc -l" "1" "Experimental - Set Flowservice Enable http"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-resume fl425e0505dec7b426384550 HelloFlow true" "grep Successful | wc -l" "1" "Experimental - Flowservice Enable Resume"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-resume fl425e0505dec7b426384550 HelloFlow false" "grep Successful | wc -l" "1" "Experimental - FlowService Disable Resume"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-restart fl425e0505dec7b426384550 HelloFlow true" "grep Successful | wc -l" "1" "Experimental - Flowservice Enable Restart"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-restart fl425e0505dec7b426384550 HelloFlow false" "grep Successful | wc -l" "1" "Experimental - FlowService Disable Restart"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' experimental-flowservice-details fl425e0505dec7b426384550" "grep Success | wc -l" "1" "Experimental - Get Flow Service details"
 
 
 

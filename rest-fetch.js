@@ -426,4 +426,4 @@ function isJSONObject(obj) {
 
 
 module.exports = { custom, addCookieToJar, displayCookies, addAllCookies, get, getPlain, post, put, del, httpDelete, postDownloadFile,downloadFile,postUploadFile };
-//get, getPlain, post, put, del, postDownloadFile, postUploadFile,uploadFileFormData, downloadFile, httpDelete, 
+

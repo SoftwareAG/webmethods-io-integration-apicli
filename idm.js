@@ -188,11 +188,15 @@ function allRoles()
 async function resetPassword(userId,newPassword)
 {
     url=getApiUrl()+"/users/" + userId + "/resetPassword";
+
+    debug("URL: " + url);
     const base64Pw = Buffer.from(`${newPassword}`).toString('base64');
     var data={};
     data.password = base64Pw;
+    debug("Post body: " + JSON.stringify(data));
     headers = setHeaders();
     response = await sync_rest.custom(url, undefined, undefined, timeout,data,undefined,"PUT", headers,true,false,undefined,undefined);
+    debug("Response\n" + JSON.stringify(response));
     console.log(JSON.stringify({"response":response}));
 }
 
@@ -207,7 +211,6 @@ async function createUser(firstName,lastName,email,username)
     data.username = username;
     headers = setHeaders();
     response = await sync_rest.custom(url, undefined, undefined, timeout,data,undefined,"POST", headers,true,false,undefined,undefined);
-    //console.log(response);
     console.log(JSON.stringify({"response":response}));
 }
 
