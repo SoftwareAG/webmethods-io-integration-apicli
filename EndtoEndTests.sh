@@ -229,8 +229,6 @@ cleanup_function() {
 
 #---------------------------------------------------------------------------------------------------
 
-
-
 printf "\n${COLOR_CYAN}* Projects\n${COLOR_RESET}"
 # Project Functions
 run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project" "grep -c CLITestProject" "1" "Project List"
@@ -246,6 +244,7 @@ run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PAS
 
 #Import project
 run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-import project.zip newnameproject" "grep 'IMPORT_SUCCESS' | wc -l" "1" "Import Project"
+rm project.zip
 
 #Delete Imported Project
 run_test "node --no-deprecation wmiocli.js -d ${PROD_TENANT} -u ${USER} -p '${PASS}' project-delete $projectUid" "grep 'Project deleted successfully' | wc -l" "1" "Delete Imported Project"
@@ -259,8 +258,6 @@ run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PAS
 
 #Update Project
 run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-update $projectUid changed" "grep 'changed' | wc -l" "1" "Update Project Name"
-
-
 
 #---------------------------------------------------------------------------------------------------
 
@@ -277,7 +274,7 @@ run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PAS
 #Delete Project
 run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' project-delete $projectUid" "grep 'Project deleted successfully' | wc -l" "1" "Delete Project"
 
-#---------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------
 
 printf "\n${COLOR_CYAN}* Publish/Deploy${COLOR_RESET}\n"
 #Deploy & Publish
@@ -363,6 +360,7 @@ run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PAS
 #---------------------------------------------------------------------------------------------------
 
 #Workflows
+
 printf "\n${COLOR_CYAN}* Worlkflows${COLOR_RESET}\n"
 run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-export CLITestProject fl835fe9b99489cc5c3dbdc8 wf.zip" "grep 'success' | wc -l" "1" "Export workflow"
 run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' workflow-import CLITestProject wf.zip" "grep uid | wc -l" "1" "jq -r .output.uid" "Import Workflow"
@@ -387,19 +385,27 @@ rm fs.zip
 
 #---------------------------------------------------------------------------------------------------
 
-printf "\n${COLOR_CYAN}* Theme${COLOR_RESET}\n"
-run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme" \
-  "grep 'settings' | wc -l" \
-  "1" \
-  "jq -r '.output[] | select(.name == \"ThemeRed\") | .uid'" \
-  "List Themes"
-themeId=`echo $result`
 
+
+printf "\n${COLOR_CYAN}* Theme${COLOR_RESET}\n"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme ${themeId}" "grep 'settings' | wc -l" "1" "List Themes"
+
+
+node --no-deprecation wmiocli.js -d "${DEV_TENANT}" -u "${USER}" -p "${PASS}" theme > theme.json
+themeId=`jq -r '.output[] | select(.name == "ThemeRed") | .uid' theme.json`
+themeText=`jq -r '.output[] | select(.name == "ThemeRed")' theme.json`
+
+
+#run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme ${themeId}" "grep 'settings' | wc -l" "1" "Get Individual Theme"
 run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme ${themeId}" "grep 'settings' | wc -l" "1" "Get Individual Theme"
-run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme ${themeId}" "grep 'settings' | wc -l" "1" "cat" "Get Individual Theme"
-themeText=$result
-run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}'  theme-create TestTheme 'Test Theme3' '$themeText'" "grep primaryColor | wc -l" "1" "jq -r .output.uid" "Theme create"
-themeId=`echo $result`
+
+
+#run_test_return_value "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}'  theme-create TestTheme 'Test Theme3' '$themeText'" "grep primaryColor | wc -l" "1" "jq -r .output.uid" "Theme create"
+run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}'  theme-create TestTheme 'Test Theme3' '$themeText'" "grep primaryColor | wc -l" "1" "Theme create"
+node --no-deprecation wmiocli.js -d "${DEV_TENANT}" -u "${USER}" -p "${PASS}" theme > theme.json
+themeId=`jq -r '.output[] | select(.name == "TestTheme") | .uid' theme.json`
+rm theme.json
+
 run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}'  theme-update ${themeId} TestTheme 'Test Theme3' '$themeText'" "grep primaryColor | wc -l" "1" "Theme Update"
 
 run_test "node --no-deprecation wmiocli.js -d ${DEV_TENANT} -u ${USER} -p '${PASS}' theme-activate ${themeId}" "grep '\"active\":true' | wc -l" "1" "Theme activate"
