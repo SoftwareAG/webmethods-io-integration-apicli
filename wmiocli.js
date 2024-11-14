@@ -425,12 +425,21 @@ program.command('project-triggers-delete <project-id> <trigger-id>')
 
 
 
-  program.command('project-export <project-id>')
+  program.command('project-export <project-id> <filename>')
   .description('Exports a project')
-  .action((projectId) => {
+  .action((projectId, filename) => {
     checkOptions();
     project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
-    project.exportProj(projectId);
+    project.exportProj(projectId, filename);
+  });
+
+  
+  program.command('project-import <filename> <projectname>')
+  .description('Imports a project')
+  .action((filename, projectname) => {
+    checkOptions();
+    project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    project.importProj(filename, projectname);
   });
 
 /**
