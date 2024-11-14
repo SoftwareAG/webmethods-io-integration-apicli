@@ -4,24 +4,14 @@ This requires you to provide your tenant domain name, along with a user and pass
 The --help parameter provides further information on how to use this along with some examples of its usage.
 
 This CLI tool has been tested against
-* webMethods.io Integration v11.0.6
+* webMethods.io Integration v11.0.3
 
 # License
 This project is licensed under the Apache 2.0 License - see the LICENSE file for details
 These tools are provided as-is and without warranty or support. They do not constitute part of the Software AG product suite. Users are free to use, fork and modify them, subject to the license agreement. While Software AG welcomes contributions, we cannot guarantee to include every contribution in the master project.
 
 Contact us via the TECHcommunity (https://techcommunity.softwareag.com/) if you have any questions.
-
-# IMPORTANT
-Due to a deprecated NPM library in a dependency of tough-cookie, if you're using a later version of node, you may see a deprecation notice for 'punycode'.
-This has been resolved in tough-cookie but hasn't been released (only a release candidate is available).  One this is released, this will be updated to resovle this.
-In the meantime if you use this in scripts, you might want to suppress the deprecation notice as it may affect any parsing of results.
-
-To do this run the cli tool as folows:
-```
-node --no-deprecation wmiocli.js ....
-```
-
+ 
 # Installation
 ```
 git clone https://github.com/SoftwareAG/webmethods-io-integration-apicli.git
@@ -33,7 +23,7 @@ node wmiocli.js --help
 # Usage
 
 ```
-──────────────────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────────────────┐
 │ webMethods.io Integration API CLI tool                                       │
 │ This tool provides command line access to the webMethods.io Integration APIs │
 │ Intended to aid usage within DevOps Scenarios for asset deployment           │
@@ -57,7 +47,7 @@ Options:
   --proxy <proxyURL>                                                                                                                         URL for proxy server if required
   --caCert <path-to-cert>                                                                                                                    Path to a CACert PEM file if required
   --ignoreTLSErrors                                                                                                                          Ignore TLS errors
-  --experimentalCommands                                                                                                                     Provide help information on experimental commands
+  --experimental                                                                                                                             Provide help information on experimental commands
   -h, --help                                                                                                                                 display help for command
 
 Commands:
@@ -178,20 +168,6 @@ $ node wmiocli.js
     -u user
     -p password
     project-delete fl65d3aa87fc1783ea5cf8c8
-
-Export Project:
-$ node wmiocli.js
-    -d tenant.int-aws-us.webmethods.io
-    -u user
-    -p password
-    project-export fl65d3aa87fc1783ea5cf8c8 myproject.zip
-
-Import Project:
-$ node wmiocli.js
-    -d tenant.int-aws-us.webmethods.io
-    -u user
-    -p password
-    project-export myproject.zip MyNewProjectName
 
 Get Project Assets:
 $ node wmiocli.js
@@ -613,4 +589,5 @@ $ node wmiocli.js
     -p password
     idm-user-unlock <userid>
     where userid is the unique ID returned from the idm-user call
+
 ```

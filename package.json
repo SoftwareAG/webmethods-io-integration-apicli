@@ -24,11 +24,11 @@
   },
   "homepage": "https://github.com/dpembo/wmiocli#readme",
   "devDependencies": {
-    "commander": "^8.3.0"
+    "commander": "^12.1.0"
   },
   "dependencies": {
     "formdata-node": "^6.0.3",
-    "https-proxy-agent": "^7.0.4",
+    "https-proxy-agent": "^7.0.5",
     "log4js": "^6.9.1",
     "node-fetch": "^3.3.2",
     "readline-sync": "^1.4.10",

@@ -4,7 +4,7 @@
  * Apache-2.0
  */
 
-const versionNo = "2024.8.0"
+const versionNo = "2024.11.0"
 const { Command, Option } = require('commander');
 const { exit } = require('process');
 const readline = require('readline-sync');
@@ -423,14 +423,20 @@ program.command('project-triggers-delete <project-id> <trigger-id>')
     project.deleteRefData(projectId,refDataName);
   });
 
-
-
-  program.command('project-export <project-id>')
+  program.command('project-export <project-id> [filename]')
   .description('Exports a project')
-  .action((projectId) => {
+  .action((projectId,filename) => {
     checkOptions();
     project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
-    project.exportProj(projectId);
+    project.exportProj(projectId,filename);
+  });
+
+  program.command('project-import <filename> [new-project-name]')
+  .description('Exports a project')
+  .action((filename,newProjectName) => {
+    checkOptions();
+    project.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint)
+    project.importProj(filename,newProjectName);
   });
 
 /**
@@ -753,13 +759,13 @@ program.command('idm-roles')
     idm.allRoles();
 });
 
-program.command('idm-user-create <first-name> <last-name> <email> <username>')
+program.command('idm-user-create <first-name> <last-name> <email> <username> [password]')
   .description('Creates a new user in the IDM')
-  .action(async (firstName,lastName,email,username) => {
+  .action(async (firstName,lastName,email,username,password) => {
     checkOptions();
     try {
       await idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
-      idm.createUser(firstName, lastName, email, username);
+      idm.createUser(firstName, lastName, email, username,password);
     } 
     catch (error) {
       console.error("Error:", error);
@@ -804,6 +810,20 @@ program.command('idm-user-unlock <user-id>')
       console.error("Error:", error);
     }
 });
+
+program.command('idm-user-reset-password <user-id> <new-password>')
+  .description('Unlocks a user')
+  .action(async (userId,newPassword) => {
+    checkOptions();
+    try {
+      await idm.init(tenantDomain, tenantUser, tenantPw, program.opts().timeout, program.opts().prettyprint);
+      idm.resetPassword(userId,newPassword);
+    } 
+    catch (error) {
+      console.error("Error:", error);
+    }
+});
+
 
 
 /**
